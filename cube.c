@@ -249,7 +249,7 @@ void print_cube_solved_status(int cube[6][9])
 	}
 }
 
-main ()
+int main (int argc, char** argv)
 {
 	/* the cube consists of 6 faces, each with 9 pieces
 	   the pieces go from 0 (bottom left) to 9 (top right)
