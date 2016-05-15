@@ -51,7 +51,7 @@ void print_cube(int cube[6][9])
 			}
 	}
 
-	/* print the cube, front view and 90 deg tilted right view. 
+	/* print the cube, front view and 180 deg tilted right view. 
 	   shows 5 sides of the cube */
 	printf("    +%c-%c-%c---+ ",       faces[5][6], faces[5][7], faces[5][8]);
 	printf("    +%c-%c-%c---+ \n",     faces[5][2], faces[5][1], faces[5][0]);
