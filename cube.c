@@ -271,4 +271,5 @@ main ()
 	rotate_right(cube, 2);
 	print_cube(cube);
 	print_cube_solved_status(cube);
+	return 0;
 }
