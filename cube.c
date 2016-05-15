@@ -327,6 +327,8 @@ void reset_cube(int cube[6][9])
 /* put the cube in a random state (50 pseudo-random rotations) */
 void shuffle_cube(int cube[6][9])
 {
+	/* not very random but that's ok */
+	srand(time(NULL));
 	int i, random_rotation, random_layer;
 	for (i = 0; i < 50; i++) {
 		random_rotation = rand() % 4;
