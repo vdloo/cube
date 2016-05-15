@@ -16,6 +16,25 @@ char color2letter(int color)
 	return colors[color][0];
 }
 
+/* in c the % operator is 'remainder', not 'modulo'. because I'm 
+   trying to get the modulo with a negative number the difference 
+   is visible. remainder: -1 % 4 == -1 (floor division), modulo: -1 % 4 == 3
+   this function implements modulo like % in python2 and modulo in racket
+*/
+int mod(int a, int b)
+{
+	int ret;
+	if (b < 0) {
+		ret = mod(-a, -b);
+	} else {
+		ret = a % b;
+		if (ret < 0) {
+			ret += b;
+		}
+	}	
+	return ret;
+}
+
 
 /* prints a 3d view of the cube, shows 3 sides */
 void print_cube(int cube[6][9])
@@ -79,7 +98,7 @@ int translate_vertical(int translation) {
 void rotate(int cube[6][9], int layer, int direction)
 {
 	/* loop over three sides of the cube (not four!) for the face that was specified */
-	int face, piece, next_face, initial_piece, piece_increment, max_piece;
+	int face, piece, swap_face, next_face, initial_piece, piece_increment, max_piece;
 
 	/* if we are rotating horizontally, the initial piece is the product of layer and 3.
 	   if we are rotating vertically, the initial piece is the layer but the next 
@@ -97,15 +116,17 @@ void rotate(int cube[6][9], int layer, int direction)
 		   (rotate left), the left face if direction 1 (rotate right), the up
 		   face if direction 3 (rotate down), the down face if direction 3 
 		   (rotate up) */
-		if (direction % 2) {
-			next_face = (face - 1) % 4;
+		if (mod(direction, 2) == 0) {
+			swap_face = face;
+			next_face = mod(swap_face + 1, 4);
 		} else {
-			next_face = (face + 1) % 4;
+			swap_face = 3 - face;
+			next_face = mod(swap_face - 1, 4);
 		}
 
 		/* if we are rotating up or down instead of left or right, we
 		   need to translate the movement to vertical instead of horizontal */
-		if (direction < 2) {
+		if (direction > 1) {
 			next_face = translate_vertical(next_face);
 		}
 
@@ -117,10 +138,10 @@ void rotate(int cube[6][9], int layer, int direction)
 		   note: a temp var is faster on modern CPUs but this is just cool
 		*/
 		max_piece = initial_piece + (3 * piece_increment);
-		for (piece = initial_piece; piece < max_piece; piece + piece_increment) {
-			cube[face][piece] = cube[face][piece] ^ cube[next_face][piece];
-			cube[next_face][piece] = cube[face][piece] ^ cube[next_face][piece];
-			cube[face][piece] = cube[face][piece] ^ cube[next_face][piece];
+		for (piece = initial_piece; piece < max_piece; piece = piece + piece_increment) {
+			cube[swap_face][piece] = cube[swap_face][piece] ^ cube[next_face][piece];
+			cube[next_face][piece] = cube[swap_face][piece] ^ cube[next_face][piece];
+			cube[swap_face][piece] = cube[swap_face][piece] ^ cube[next_face][piece];
 		}
 	}
 
@@ -171,10 +192,26 @@ main ()
 		{5, 5, 5, 5, 5, 5, 5, 5, 5}
 	};
 
+	printf("full rotation left\n");
 	print_cube(cube);
 	rotate_left(cube, 0);
-	rotate_left(cube, 1);
-	rotate_left(cube, 2);
+	print_cube(cube);
+	rotate_left(cube, 0);
+	print_cube(cube);
+	rotate_left(cube, 0);
+	print_cube(cube);
+	rotate_left(cube, 0);
+	print_cube(cube);
+
+	printf("full rotation right\n");
+	print_cube(cube);
+	rotate_right(cube, 0);
+	print_cube(cube);
+	rotate_right(cube, 0);
+	print_cube(cube);
+	rotate_right(cube, 0);
+	print_cube(cube);
+	rotate_right(cube, 0);
 	print_cube(cube);
 }
 
