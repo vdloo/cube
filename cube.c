@@ -171,6 +171,7 @@ void rotate(int cube[6][9], int layer, int direction)
 			cube[next_face][next_piece] = cube[swap_face][piece] ^ cube[next_face][next_piece];
 			cube[swap_face][piece] = cube[swap_face][piece] ^ cube[next_face][next_piece];
 		}
+		// todo: rotate sides when side rotates
 	}
 
 }
@@ -203,6 +204,51 @@ void rotate_up(int cube[6][9], int layer)
 	rotate(cube, layer, 3);
 }
 
+/* the solved cube looks like this */
+int solved_cube[6][9] = {
+	{0, 0, 0, 0, 0, 0, 0, 0, 0},
+	{1, 1, 1, 1, 1, 1, 1, 1, 1},
+	{2, 2, 2, 2, 2, 2, 2, 2, 2},
+	{3, 3, 3, 3, 3, 3, 3, 3, 3},
+	{4, 4, 4, 4, 4, 4, 4, 4, 4},
+	{5, 5, 5, 5, 5, 5, 5, 5, 5}
+};
+
+/* reset cube */
+void reset_cube(int cube[6][9]) 
+{
+	int face, piece;
+	for (face = 0; face < 6; face++) {
+		for (piece = 0; piece < 9; piece++) {
+			cube[face][piece] = solved_cube[face][piece];
+		}
+	}
+}
+
+/* check if the cube is solved, returns 1 when it is not solved, 0 when it is */
+int check_solved(int cube[6][9])
+{
+	int face, piece, success;
+	for (face = 0; face < 6; face++) {
+		for (piece = 0; piece < 9; piece++) {
+			if (cube[face][piece] != solved_cube[face][piece]) {
+				return 1;
+			}
+		}
+	}
+	return 0;
+}
+
+void print_cube_solved_status(int cube[6][9])
+{
+	if (check_solved(cube) == 0) { 
+		printf("cube is solved!\n");
+	}
+	else {
+		printf("cube is not solved :(\n");
+	}
+}
+
 main ()
 {
 	/* the cube consists of 6 faces, each with 9 pieces
@@ -211,23 +257,18 @@ main ()
 	   top face piece 9 is the corner of yellow face piece 3
 	   bottom face piece 0 is the corner of yellow face piece 6
 	   bottom face piece 9 is the corner of white face piece 9 */
-	int cube[6][9] = {
-		{0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1, 1, 1, 1, 1, 1, 1, 1, 1},
-		{2, 2, 2, 2, 2, 2, 2, 2, 2},
-		{3, 3, 3, 3, 3, 3, 3, 3, 3},
-		{4, 4, 4, 4, 4, 4, 4, 4, 4},
-		{5, 5, 5, 5, 5, 5, 5, 5, 5}
-	};
-
-	rotate_up(cube, 0);
-	rotate_down(cube, 0);
-	rotate_down(cube, 0);
-	rotate_left(cube, 0);
-	rotate_right(cube, 0);
-	rotate_down(cube, 0);
-	rotate_left(cube, 0);
-
-	printf("shuffled cube\n");
+	int cube[6][9];
+	reset_cube(cube);
+	printf("start cube looks like:\n");
 	print_cube(cube);
+	print_cube_solved_status(cube);
+
+	printf("rotating layer 2 to the left\n");
+	rotate_left(cube, 2);
+	print_cube(cube);
+	print_cube_solved_status(cube);
+	printf("rotating layer 2 to the right\n");
+	rotate_right(cube, 2);
+	print_cube(cube);
+	print_cube_solved_status(cube);
 }
