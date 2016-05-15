@@ -52,23 +52,23 @@ void print_cube(int cube[6][9])
 
 	/* print the cube, front view and 90 deg tilted right view. 
 	   shows 5 sides of the cube */
-	printf("    +%c-%c-%c---+ ",     faces[5][6], faces[5][7], faces[5][8]);
+	printf("    +%c-%c-%c---+ ",       faces[5][6], faces[5][7], faces[5][8]);
 	printf("    +%c-%c-%c---+ \n",     faces[5][2], faces[5][1], faces[5][0]);
-	printf("   / %c %c %c  /| ",     faces[5][3], faces[5][4], faces[5][5]);
+	printf("   / %c %c %c  /| ",       faces[5][3], faces[5][4], faces[5][5]);
 	printf("   / %c %c %c  /| \n",     faces[5][5], faces[5][4], faces[5][3]);
-	printf("  /  %c %c %c / | ",     faces[5][0], faces[5][1], faces[5][2]);
+	printf("  /  %c %c %c / | ",       faces[5][0], faces[5][1], faces[5][2]);
 	printf("  /  %c %c %c / | \n",     faces[5][8], faces[5][7], faces[5][6]);
-	printf(" +--------+%c%c%c ",     faces[1][6], faces[1][7], faces[1][8]);
+	printf(" +--------+%c%c%c ",       faces[1][6], faces[1][7], faces[1][8]);
 	printf(" +--------+%c%c%c \n",     faces[3][6], faces[3][7], faces[3][8]);
-	printf(" |        |%c%c%c ",     faces[1][3], faces[1][4], faces[1][5]);
+	printf(" |        |%c%c%c ",       faces[1][3], faces[1][4], faces[1][5]);
 	printf(" |        |%c%c%c \n",     faces[3][3], faces[3][4], faces[3][5]);
-	printf(" |%c  %c  %c |%c%c%c ",  faces[0][6], faces[0][7], faces[0][8], 
-					  faces[1][0], faces[1][1], faces[1][2]);
+	printf(" |%c  %c  %c |%c%c%c ",    faces[0][6], faces[0][7], faces[0][8], 
+					   faces[1][0], faces[1][1], faces[1][2]);
 	printf(" |%c  %c  %c |%c%c%c \n",  faces[2][6], faces[2][7], faces[2][8], 
-					  faces[3][0], faces[3][1], faces[3][2]);
-	printf(" |%c  %c  %c | /  ",     faces[0][3], faces[0][4], faces[0][5]);
+					   faces[3][0], faces[3][1], faces[3][2]);
+	printf(" |%c  %c  %c | /  ",       faces[0][3], faces[0][4], faces[0][5]);
 	printf(" |%c  %c  %c | /  \n",     faces[2][3], faces[2][4], faces[2][5]);
-	printf(" |%c  %c  %c |/   ",     faces[0][0], faces[0][1], faces[0][2]);
+	printf(" |%c  %c  %c |/   ",       faces[0][0], faces[0][1], faces[0][2]);
 	printf(" |%c  %c  %c |/   \n",     faces[2][0], faces[2][1], faces[2][2]);
 	printf(" +--------+    ");
 	printf(" +--------+    \n");
@@ -111,6 +111,64 @@ int translate_piece(int swap_face, int next_face, int piece)
 	} else {
 		/* not doing a vertical translation that requires an orientation change */
 		return piece;
+	}
+}
+
+const int left_surface_rotate_mapping[9] = {
+	/* bottom layer */
+	6, 3, 0,
+	/* middle layer */
+	7, 4, 1,
+	/* top layer */
+	8, 5, 2
+};
+
+const int right_surface_rotate_mapping[9] = {
+	/* bottom layer */
+	2, 5, 8,
+	/* middle layer */
+	1, 4, 7,
+	/* top layer */
+	0, 3, 6
+};
+
+/* rotate the surface of a face 90 degrees 
+   direction == 0 -> left rotate:
+   6 7 8  0 3 6
+   3 4 5  1 4 7
+   0 1 2  2 5 8
+
+   direction == 1 -> right rotate:
+   8 5 2  6 7 8 
+   7 4 1  3 4 5
+   6 3 0  0 1 2 
+*/
+
+void rotate_surface(int cube[6][9], int face, int direction)
+{
+	int piece, new_piece;
+	int tmp_face[9];
+
+	for (piece = 0; piece < 9; piece++) {
+		if (direction == 0) {
+		    if (face > 3 ) {
+		        /* rotate the other way on top an bottom (inverted faces) */
+		        new_piece = right_surface_rotate_mapping[piece];
+		    } else {
+		        new_piece = left_surface_rotate_mapping[piece];
+		    }
+		} else if(direction == 1) {
+		    if (face > 3 ) {
+		        /* rotate the other way on top an bottom (inverted faces) */
+		        new_piece = left_surface_rotate_mapping[piece];
+		    } else {
+		        new_piece = right_surface_rotate_mapping[piece];
+		    }
+		} 
+		tmp_face[piece] = cube[face][new_piece];
+	}
+	for (piece = 0; piece < 9; piece++) {
+		cube[face][piece] = tmp_face[piece];
 	}
 }
 
@@ -171,9 +229,48 @@ void rotate(int cube[6][9], int layer, int direction)
 			cube[next_face][next_piece] = cube[swap_face][piece] ^ cube[next_face][next_piece];
 			cube[swap_face][piece] = cube[swap_face][piece] ^ cube[next_face][next_piece];
 		}
-		// todo: rotate sides when side rotates
+		
 	}
-
+	/* if a side layer is rotated, also rotate the surface */
+	if (layer == 0) {
+		switch(direction) {
+			case 0:
+				/* rotate face 4 (bottom) left */
+				rotate_surface(cube, 4, 0);
+				break;
+			case 1:
+				/* rotate face 4 (bottom) right */
+				rotate_surface(cube, 4, 1);
+				break;
+			case 2:
+				/* rotate face 3 (left) left */
+				rotate_surface(cube, 3, 0);
+				break;
+			case 3:
+				/* rotate face 3 (left) right */
+				rotate_surface(cube, 3, 1);
+				break;
+		}
+	} else if (layer == 2) {
+		switch(direction) {
+			case 0:
+				/* rotate face 5 (top) left */
+				rotate_surface(cube, 5, 0);
+				break;
+			case 1:
+				/* rotate face 5 (top) right */
+				rotate_surface(cube, 5, 1);
+				break;
+			case 2:
+				/* rotate face 1 (right) left */
+				rotate_surface(cube, 1, 0);
+				break;
+			case 3:
+				/* rotate face 1 (right) right */
+				rotate_surface(cube, 1, 1);
+				break;
+		}
+	}
 }
 
 /* rotate one of the 3 layers to the left 
@@ -260,15 +357,6 @@ int main (int argc, char** argv)
 	int cube[6][9];
 	reset_cube(cube);
 	printf("start cube looks like:\n");
-	print_cube(cube);
-	print_cube_solved_status(cube);
-
-	printf("rotating layer 2 to the left\n");
-	rotate_left(cube, 2);
-	print_cube(cube);
-	print_cube_solved_status(cube);
-	printf("rotating layer 2 to the right\n");
-	rotate_right(cube, 2);
 	print_cube(cube);
 	print_cube_solved_status(cube);
 	return 0;
