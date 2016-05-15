@@ -47,7 +47,7 @@ void print_cube(int cube[6][9])
 			color = cube[face][piece];
 			letter = color2letter(color);
 			faces[face][piece] = letter;
-        	}
+			}
 	}
 
 	/* print the cube, front view and 90 deg tilted right view. 
@@ -124,7 +124,7 @@ void rotate(int cube[6][9], int layer, int direction)
 {
 	/* loop over three sides of the cube (not four!) for the face that was specified */
 	int face, piece, next_piece, swap_face, next_face, 
- 	    initial_piece, piece_increment, max_piece;
+		initial_piece, piece_increment, max_piece;
 
 	/* if we are rotating horizontally, the initial piece is the product of layer and 3.
 	   if we are rotating vertically, the initial piece is the layer but the next 
