@@ -383,7 +383,7 @@ void bogosolve(int cube[6][9])
 {
 	printf("starting bogosolve\n");
 	int i;
-	for (i = 0; i < 1000000000000000; i++) {
+	for (i = 1; i < 1000000000000000; i++) {
 		random_rotation(cube);
 		if (check_solved(cube) == 0) { 
 			/* never gonna happen */
