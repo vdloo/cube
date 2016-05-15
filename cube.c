@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 /* map colors to numbers. Western color scheme (blue-orange-yellow / minus yellow) */
 
@@ -322,6 +323,31 @@ void reset_cube(int cube[6][9])
 	}
 }
 
+
+/* put the cube in a random state (50 pseudo-random rotations) */
+void shuffle_cube(int cube[6][9])
+{
+	int i, random_rotation, random_layer;
+	for (i = 0; i < 50; i++) {
+		random_rotation = rand() % 4;
+		random_layer = rand() % 3;
+		switch(random_rotation) {
+			case 0:
+				rotate_left(cube, random_layer);
+				break;
+			case 1:
+				rotate_right(cube, random_layer);
+				break;
+			case 2:
+				rotate_down(cube, random_layer);
+				break;
+			case 3:
+				rotate_up(cube, random_layer);
+				break;
+		}
+	}
+}
+
 /* check if the cube is solved, returns 1 when it is not solved, 0 when it is */
 int check_solved(int cube[6][9])
 {
@@ -359,5 +385,11 @@ int main (int argc, char** argv)
 	printf("start cube looks like:\n");
 	print_cube(cube);
 	print_cube_solved_status(cube);
+
+	printf("shuffling cube\n");
+	shuffle_cube(cube);
+	print_cube(cube);
+	print_cube_solved_status(cube);
+
 	return 0;
 }
