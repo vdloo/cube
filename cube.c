@@ -50,14 +50,14 @@ void print_cube(int cube[6][9])
         	}
 	}
 
-	/* print the cube, front view and 180 deg tilted upwards view. 
-	   shows all sides of the cube */
+	/* print the cube, front view and 90 deg tilted right view. 
+	   shows 8 sides of the cube */
 	printf("    +%c-%c-%c---+ ",     faces[5][6], faces[5][7], faces[5][8]);
-	printf("    +%c-%c-%c---+ \n",     faces[4][6], faces[4][7], faces[4][8]);
+	printf("    +%c-%c-%c---+ \n",     faces[5][2], faces[5][1], faces[5][0]);
 	printf("   / %c %c %c  /| ",     faces[5][3], faces[5][4], faces[5][5]);
-	printf("   / %c %c %c  /| \n",     faces[4][3], faces[4][4], faces[4][5]);
+	printf("   / %c %c %c  /| \n",     faces[5][5], faces[5][4], faces[5][3]);
 	printf("  /  %c %c %c / | ",     faces[5][0], faces[5][1], faces[5][2]);
-	printf("  /  %c %c %c / | \n",     faces[4][0], faces[4][1], faces[4][2]);
+	printf("  /  %c %c %c / | \n",     faces[5][8], faces[5][7], faces[5][6]);
 	printf(" +--------+%c%c%c ",     faces[1][6], faces[1][7], faces[1][8]);
 	printf(" +--------+%c%c%c \n",     faces[3][6], faces[3][7], faces[3][8]);
 	printf(" |        |%c%c%c ",     faces[1][3], faces[1][4], faces[1][5]);
@@ -75,17 +75,42 @@ void print_cube(int cube[6][9])
 }
 
 /* translate the rotation translation to a vertical movement */
-int translate_vertical(int translation) {
+int translate_vertical(int face)
+{
 	/* 0 is the white face */
 	/* 5 is the top face */
 	/* 2 is the yellow face */
 	/* 4 is the bottom face */
-	if (translation == 1) {
+	if (face == 1) {
 		return 5;
-	} else if (translation == 3) {
+	} else if (face == 3) {
 		return 4;
 	} else {
-		return translation;
+		return face;
+	}
+}
+
+/* for a vertical swap the orientation of the piece has to be changed 
+   for example: the bottom left piece of the top face is no longer the bottom
+   left piece when swapped with the back face (yellow from the white face 
+   perspective), it then has become the top right piece */
+int translate_piece(int swap_face, int next_face, int piece)
+{
+	if (swap_face == 5 && next_face == 2) {
+		/* swapping the top with the back (rotate up) */
+		return 8 - piece;
+	} else if (swap_face == 2 && next_face == 5) {
+		/* swapping the back with the top (rotate down) */
+		return 8 - piece;
+	} else if (swap_face == 2 && next_face == 4) {
+		/* swapping the back with the bottom (rotate up) */
+		return 8 - piece;
+	} else if (swap_face == 4 && next_face == 2) {
+		/* swapping the bottom with the back (rotate down) */
+		return 8 - piece;
+	} else {
+		/* not doing a vertical translation that requires an orientation change */
+		return piece;
 	}
 }
 
@@ -98,12 +123,13 @@ int translate_vertical(int translation) {
 void rotate(int cube[6][9], int layer, int direction)
 {
 	/* loop over three sides of the cube (not four!) for the face that was specified */
-	int face, piece, swap_face, next_face, initial_piece, piece_increment, max_piece;
+	int face, piece, next_piece, swap_face, next_face, 
+ 	    initial_piece, piece_increment, max_piece;
 
 	/* if we are rotating horizontally, the initial piece is the product of layer and 3.
 	   if we are rotating vertically, the initial piece is the layer but the next 
 	   piece is the current piece plus 3 (because we go up a layer in the face). */
-	if (layer < 2) {
+	if (direction < 2) {
 		initial_piece = layer * 3;
 		piece_increment = 1;
 	} else {
@@ -128,6 +154,7 @@ void rotate(int cube[6][9], int layer, int direction)
 		   need to translate the movement to vertical instead of horizontal */
 		if (direction > 1) {
 			next_face = translate_vertical(next_face);
+			swap_face = translate_vertical(swap_face);
 		}
 
 
@@ -139,9 +166,10 @@ void rotate(int cube[6][9], int layer, int direction)
 		*/
 		max_piece = initial_piece + (3 * piece_increment);
 		for (piece = initial_piece; piece < max_piece; piece = piece + piece_increment) {
-			cube[swap_face][piece] = cube[swap_face][piece] ^ cube[next_face][piece];
-			cube[next_face][piece] = cube[swap_face][piece] ^ cube[next_face][piece];
-			cube[swap_face][piece] = cube[swap_face][piece] ^ cube[next_face][piece];
+			next_piece = translate_piece(swap_face, next_face, piece);
+			cube[swap_face][piece] = cube[swap_face][piece] ^ cube[next_face][next_piece];
+			cube[next_face][next_piece] = cube[swap_face][piece] ^ cube[next_face][next_piece];
+			cube[swap_face][piece] = cube[swap_face][piece] ^ cube[next_face][next_piece];
 		}
 	}
 
@@ -192,26 +220,14 @@ main ()
 		{5, 5, 5, 5, 5, 5, 5, 5, 5}
 	};
 
-	printf("full rotation left\n");
-	print_cube(cube);
+	rotate_up(cube, 0);
+	rotate_down(cube, 0);
+	rotate_down(cube, 0);
 	rotate_left(cube, 0);
-	print_cube(cube);
+	rotate_right(cube, 0);
+	rotate_down(cube, 0);
 	rotate_left(cube, 0);
-	print_cube(cube);
-	rotate_left(cube, 0);
-	print_cube(cube);
-	rotate_left(cube, 0);
-	print_cube(cube);
 
-	printf("full rotation right\n");
-	print_cube(cube);
-	rotate_right(cube, 0);
-	print_cube(cube);
-	rotate_right(cube, 0);
-	print_cube(cube);
-	rotate_right(cube, 0);
-	print_cube(cube);
-	rotate_right(cube, 0);
+	printf("shuffled cube\n");
 	print_cube(cube);
 }
-
