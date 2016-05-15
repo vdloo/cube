@@ -324,13 +324,9 @@ void reset_cube(int cube[6][9])
 }
 
 
-/* put the cube in a random state (50 pseudo-random rotations) */
-void shuffle_cube(int cube[6][9])
+void random_rotation(int cube[6][9])
 {
-	/* not very random but that's ok */
-	srand(time(NULL));
-	int i, random_rotation, random_layer;
-	for (i = 0; i < 50; i++) {
+	int random_rotation, random_layer;
 		random_rotation = rand() % 4;
 		random_layer = rand() % 3;
 		switch(random_rotation) {
@@ -347,6 +343,14 @@ void shuffle_cube(int cube[6][9])
 				rotate_up(cube, random_layer);
 				break;
 		}
+}
+
+/* put the cube in a random state (50 pseudo-random rotations) */
+void shuffle_cube(int cube[6][9])
+{
+	int i;
+	for (i = 0; i < 50; i++) {
+		random_rotation(cube);
 	}
 }
 
@@ -374,15 +378,29 @@ void print_cube_solved_status(int cube[6][9])
 	}
 }
 
-int main (int argc, char** argv)
+/* randomly try rotations. with 6***(6*8) combinations this is never going to finish */
+void bogosolve(int cube[6][9])
 {
-	/* the cube consists of 6 faces, each with 9 pieces
-	   the pieces go from 0 (bottom left) to 9 (top right)
-	   top face piece 0 is the corner of the white face piece 6
-	   top face piece 9 is the corner of yellow face piece 3
-	   bottom face piece 0 is the corner of yellow face piece 6
-	   bottom face piece 9 is the corner of white face piece 9 */
-	int cube[6][9];
+	printf("starting bogosolve\n");
+	int i;
+	for (i = 0; i < 1000000000000000; i++) {
+		random_rotation(cube);
+		if (check_solved(cube) == 0) { 
+			/* never gonna happen */
+			printf("done!");
+			break;
+		}
+		if (i % 1000000 == 0) {
+			printf("tried %d rotations\n", i);
+			print_cube(cube);
+			print_cube_solved_status(cube);
+		}
+	}
+}
+
+/* create the new cube and shuffle it */
+void instantiate_cube(int cube[6][9])
+{
 	reset_cube(cube);
 	printf("start cube looks like:\n");
 	print_cube(cube);
@@ -392,6 +410,23 @@ int main (int argc, char** argv)
 	shuffle_cube(cube);
 	print_cube(cube);
 	print_cube_solved_status(cube);
+}
+
+int main (int argc, char** argv)
+{
+	/* not very random but that's ok */
+	srand(time(NULL));
+
+	/* the cube consists of 6 faces, each with 9 pieces
+	   the pieces go from 0 (bottom left) to 9 (top right)
+	   top face piece 0 is the corner of the white face piece 6
+	   top face piece 9 is the corner of yellow face piece 3
+	   bottom face piece 0 is the corner of yellow face piece 6
+	   bottom face piece 9 is the corner of white face piece 9 */
+	int cube[6][9];
+	instantiate_cube(cube);
+
+	bogosolve(cube);
 
 	return 0;
 }
