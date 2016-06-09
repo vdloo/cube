@@ -95,19 +95,27 @@ int translate_vertical(int face)
    for example: the bottom left piece of the top face is no longer the bottom
    left piece when swapped with the back face (yellow from the white face 
    perspective), it then has become the top right piece */
-int translate_piece(int swap_face, int next_face, int piece)
+int translate_destination_piece(int swap_face, int next_face, int piece)
 {
 	if (swap_face == 5 && next_face == 2) {
 		/* swapping the top with the back (rotate up) */
 		return 8 - piece;
-	} else if (swap_face == 2 && next_face == 5) {
-		/* swapping the back with the top (rotate down) */
-		return 8 - piece;
-	} else if (swap_face == 2 && next_face == 4) {
-		/* swapping the back with the bottom (rotate up) */
-		return 8 - piece;
 	} else if (swap_face == 4 && next_face == 2) {
 		/* swapping the bottom with the back (rotate down) */
+		return 8 - piece;
+	} else {
+		/* not doing a vertical translation that requires an orientation change */
+		return piece;
+	}
+}
+
+int translate_source_piece(int swap_face, int next_face, int piece)
+{
+	if (swap_face == 2 && next_face == 4) {
+		/* swapping the back with the bottom (rotate up) */
+		return 8 - piece;
+	} else if (swap_face == 2 && next_face == 5) {
+		/* swapping the back with the top (rotate down) */
 		return 8 - piece;
 	} else {
 		/* not doing a vertical translation that requires an orientation change */
@@ -182,7 +190,7 @@ void rotate_surface(int cube[6][9], int face, int direction)
 void rotate(int cube[6][9], int layer, int direction)
 {
 	/* loop over three sides of the cube (not four!) for the face that was specified */
-	int face, piece, next_piece, swap_face, next_face, 
+	int face, piece, source_piece, destination_piece, swap_face, next_face, 
 		initial_piece, piece_increment, max_piece;
 
 	/* if we are rotating horizontally, the initial piece is the product of layer and 3.
@@ -225,10 +233,11 @@ void rotate(int cube[6][9], int layer, int direction)
 		*/
 		max_piece = initial_piece + (3 * piece_increment);
 		for (piece = initial_piece; piece < max_piece; piece = piece + piece_increment) {
-			next_piece = translate_piece(swap_face, next_face, piece);
-			cube[swap_face][piece] = cube[swap_face][piece] ^ cube[next_face][next_piece];
-			cube[next_face][next_piece] = cube[swap_face][piece] ^ cube[next_face][next_piece];
-			cube[swap_face][piece] = cube[swap_face][piece] ^ cube[next_face][next_piece];
+			source_piece = translate_source_piece(swap_face, next_face, piece);
+			destination_piece = translate_destination_piece(swap_face, next_face, piece);
+			cube[swap_face][source_piece] = cube[swap_face][source_piece] ^ cube[next_face][destination_piece];
+			cube[next_face][destination_piece] = cube[swap_face][source_piece] ^ cube[next_face][destination_piece];
+			cube[swap_face][source_piece] = cube[swap_face][source_piece] ^ cube[next_face][destination_piece];
 		}
 		
 	}
@@ -273,6 +282,87 @@ void rotate(int cube[6][9], int layer, int direction)
 		}
 	}
 }
+
+/* prototype for rotation because we do mutual recursion between perform_signmaster_rotation and rotation
+ * and we need to be able to call it in perform_signmaster_rotation before defining it */
+void rotation(int cube[6][9], char signmaster_letter, int reverse);
+
+void perform_signmaster_rotation(int cube[6][9], const char *signmaster_sequence)
+{
+	int i, next_is_quote, cur_is_quote;
+
+	/* Loop over chars in the str until we hit the NULL terminator */
+	for (i = 0; *signmaster_sequence != '\0'; signmaster_sequence++) {
+		next_is_quote = *(signmaster_sequence + 1) == '\'';
+		cur_is_quote = *signmaster_sequence == '\'';
+
+		if (cur_is_quote && next_is_quote) {
+			fprintf(stderr, "Signmaster sequence contains two consecutive apostrophes! Aborting..\n");
+			exit(EXIT_FAILURE);
+		}
+
+		if (cur_is_quote) {
+			// do reverse rotation of previous 
+			rotation(cube, *(signmaster_sequence - 1), 1);
+		} else if (!next_is_quote){
+			// do normal rotation of the current
+			rotation(cube, *signmaster_sequence, 0);
+		}
+	}
+}
+
+void rotation(int cube[6][9], char signmaster_letter, int reverse)
+{
+	/* For the beginner’s method you just have to know the simple 
+	   F (front), B (back), R (right), L (left), D (down), U (up), 
+	   so for now let's only implement those.
+	   see: https://ruwix.com/the-rubiks-cube/notation/ */
+	switch(signmaster_letter) {
+		case 'U':
+			rotate(cube, 2, reverse);
+			break;
+		case 'L':
+			rotate(cube, 0, reverse + 2);
+			break;
+		case 'F':
+			// flip cube 90 deg to the left
+			perform_signmaster_rotation(cube, "UE'D'");
+			if (reverse) {
+				// move up left slice
+				perform_signmaster_rotation(cube, "L'");
+			} else {
+				// move down left slice
+				perform_signmaster_rotation(cube, "L");
+			}
+			// flip cube back 90 deg to the left
+			perform_signmaster_rotation(cube, "U'ED");
+			break;
+		case 'R':
+			rotate(cube, 2, (1 - reverse) + 2);
+			break;
+		case 'B':
+			perform_signmaster_rotation(cube, "UE'D'");
+			if (reverse) {
+				// move up right slice
+				perform_signmaster_rotation(cube, "R'");
+			} else {
+				// move down right slice
+				perform_signmaster_rotation(cube, "R");
+			}
+			perform_signmaster_rotation(cube, "U'ED");
+			break;
+		case 'D':
+			rotate(cube, 0, (1 - reverse));
+			break;
+		case 'E':
+			rotate(cube, 1, (1 - reverse));
+			break;
+		default:
+			fprintf(stderr, "Signmaster rotation %c is not implemented! Aborting..\n", signmaster_letter);
+			exit(EXIT_FAILURE);
+	}
+}
+
 
 /* rotate one of the 3 layers to the left 
    bottom layer is 0, top layer is 2 */
@@ -378,26 +468,6 @@ void print_cube_solved_status(int cube[6][9])
 	}
 }
 
-/* randomly try rotations. with 6***(6*8) combinations this is never going to finish */
-void bogosolve(int cube[6][9])
-{
-	printf("starting bogosolve\n");
-	int i;
-	for (i = 1; i < 1000000000000000; i++) {
-		random_rotation(cube);
-		if (check_solved(cube) == 0) { 
-			/* never gonna happen */
-			printf("done!");
-			break;
-		}
-		if (i % 1000000 == 0) {
-			printf("tried %d rotations\n", i);
-			print_cube(cube);
-			print_cube_solved_status(cube);
-		}
-	}
-}
-
 /* create the new cube and shuffle it */
 void instantiate_cube(int cube[6][9])
 {
@@ -406,10 +476,10 @@ void instantiate_cube(int cube[6][9])
 	print_cube(cube);
 	print_cube_solved_status(cube);
 
-	printf("shuffling cube\n");
-	shuffle_cube(cube);
-	print_cube(cube);
-	print_cube_solved_status(cube);
+	//printf("shuffling cube\n");
+	//shuffle_cube(cube);
+	//print_cube(cube);
+	//print_cube_solved_status(cube);
 }
 
 int main (int argc, char** argv)
@@ -426,7 +496,14 @@ int main (int argc, char** argv)
 	int cube[6][9];
 	instantiate_cube(cube);
 
-	bogosolve(cube);
+	perform_signmaster_rotation(cube, "F");
+	print_cube(cube);
+	print_cube_solved_status(cube);
 
-	return 0;
+	perform_signmaster_rotation(cube, "F'");
+	print_cube(cube);
+	print_cube_solved_status(cube);
+
+
+	exit(EXIT_SUCCESS);
 }
