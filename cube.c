@@ -10,6 +10,8 @@ const char *colors[6] = {
 	"green", "blue"
 };
 
+/* all implemented individual rotations */
+char *signmaster_rotations[9] = {"U", "L", "M", "S", "F", "R", "B", "D", "E"};
 
 /* returns the first letter of a color specified by number */
 char color2letter(int color)
@@ -46,7 +48,11 @@ void print_cube(int cube[6][9])
 	for (face = 0; face < 6; face++) {
 		for (piece = 0; piece < 9; piece++) {
 			color = cube[face][piece];
-			letter = color2letter(color);
+			if (color == -1) {
+				letter = '*';
+			} else {
+				letter = color2letter(color);
+			}
 			faces[face][piece] = letter;
 			}
 	}
@@ -324,6 +330,21 @@ void rotation(int cube[6][9], char signmaster_letter, int reverse)
 		case 'L':
 			rotate(cube, 0, reverse + 2);
 			break;
+		case 'M':
+			rotate(cube, 1, reverse + 2);
+			break;
+		case 'S':
+			// flip cube 90 deg to the left
+			perform_signmaster_rotation(cube, "UE'D'");
+			if (reverse) {
+				// move up middle slice
+				perform_signmaster_rotation(cube, "M'");
+			} else {
+				// move down middle slice
+				perform_signmaster_rotation(cube, "M");
+			}
+			// flip cube back 90 deg to the left
+			perform_signmaster_rotation(cube, "U'ED");
 		case 'F':
 			// flip cube 90 deg to the left
 			perform_signmaster_rotation(cube, "UE'D'");
@@ -402,15 +423,21 @@ int solved_cube[6][9] = {
 	{5, 5, 5, 5, 5, 5, 5, 5, 5}
 };
 
-/* reset cube */
-void reset_cube(int cube[6][9]) 
+/* copy cube */
+void copy_cube(int destination_cube[6][9], int source_cube[6][9])
 {
 	int face, piece;
 	for (face = 0; face < 6; face++) {
 		for (piece = 0; piece < 9; piece++) {
-			cube[face][piece] = solved_cube[face][piece];
+			destination_cube[face][piece] = source_cube[face][piece];
 		}
 	}
+}
+
+/* reset cube */
+void reset_cube(int cube[6][9]) 
+{
+	copy_cube(cube, solved_cube);
 }
 
 
@@ -444,18 +471,32 @@ void shuffle_cube(int cube[6][9])
 	}
 }
 
-/* check if the cube is solved, returns 1 when it is not solved, 0 when it is */
-int check_solved(int cube[6][9])
+/* compare a cube to another cube (the desired_state). 
+ * -1 values in the desired cube are not checked so that
+ *  partial matches can also be check (like only verify a row)
+ *  returns 0 if the cube matches, otherwise how much pieces don't
+ */
+int count_mismatches(int cube[6][9], int desired_state[6][9])
 {
-	int face, piece, success;
+	int face, piece, success, not_matching = 0;
 	for (face = 0; face < 6; face++) {
 		for (piece = 0; piece < 9; piece++) {
-			if (cube[face][piece] != solved_cube[face][piece]) {
-				return 1;
+			/* skip checking pieces we don't care about */
+			if (desired_state[face][piece] == -1) {
+				continue;
+			}
+			if (cube[face][piece] != desired_state[face][piece]) {
+				not_matching++;
 			}
 		}
 	}
-	return 0;
+	return not_matching;
+}
+
+/* check if the cube is solved, returns 1 when it is not solved, 0 when it is */
+int check_solved(int cube[6][9])
+{
+	return count_mismatches(cube, solved_cube);
 }
 
 void print_cube_solved_status(int cube[6][9])
@@ -476,16 +517,16 @@ void instantiate_cube(int cube[6][9])
 	print_cube(cube);
 	print_cube_solved_status(cube);
 
-	//printf("shuffling cube\n");
-	//shuffle_cube(cube);
-	//print_cube(cube);
-	//print_cube_solved_status(cube);
+	printf("shuffling cube\n");
+	shuffle_cube(cube);
+	print_cube(cube);
+	print_cube_solved_status(cube);
 }
 
 int main (int argc, char** argv)
 {
 	/* not very random but that's ok */
-	srand(time(NULL));
+	srand(getpid());
 
 	/* the cube consists of 6 faces, each with 9 pieces
 	   the pieces go from 0 (bottom left) to 9 (top right)
@@ -495,15 +536,6 @@ int main (int argc, char** argv)
 	   bottom face piece 9 is the corner of white face piece 9 */
 	int cube[6][9];
 	instantiate_cube(cube);
-
-	perform_signmaster_rotation(cube, "F");
-	print_cube(cube);
-	print_cube_solved_status(cube);
-
-	perform_signmaster_rotation(cube, "F'");
-	print_cube(cube);
-	print_cube_solved_status(cube);
-
 
 	exit(EXIT_SUCCESS);
 }
