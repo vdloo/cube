@@ -46,7 +46,11 @@ void print_cube(int cube[6][9])
 	for (face = 0; face < 6; face++) {
 		for (piece = 0; piece < 9; piece++) {
 			color = cube[face][piece];
-			letter = color2letter(color);
+			if (color == -1) {
+				letter = '*';
+			} else {
+				letter = color2letter(color);
+			}
 			faces[face][piece] = letter;
 			}
 	}
@@ -324,6 +328,21 @@ void rotation(int cube[6][9], char signmaster_letter, int reverse)
 		case 'L':
 			rotate(cube, 0, reverse + 2);
 			break;
+		case 'M':
+			rotate(cube, 1, reverse + 2);
+			break;
+		case 'S':
+			// flip cube 90 deg to the left
+			perform_signmaster_rotation(cube, "UE'D'");
+			if (reverse) {
+				// move up middle slice
+				perform_signmaster_rotation(cube, "M'");
+			} else {
+				// move down middle slice
+				perform_signmaster_rotation(cube, "M");
+			}
+			// flip cube back 90 deg to the left
+			perform_signmaster_rotation(cube, "U'ED");
 		case 'F':
 			// flip cube 90 deg to the left
 			perform_signmaster_rotation(cube, "UE'D'");
@@ -402,15 +421,21 @@ int solved_cube[6][9] = {
 	{5, 5, 5, 5, 5, 5, 5, 5, 5}
 };
 
-/* reset cube */
-void reset_cube(int cube[6][9]) 
+/* copy cube */
+void copy_cube(int destination_cube[6][9], int source_cube[6][9])
 {
 	int face, piece;
 	for (face = 0; face < 6; face++) {
 		for (piece = 0; piece < 9; piece++) {
-			cube[face][piece] = solved_cube[face][piece];
+			source_cube[face][piece] = destination_cube[face][piece];
 		}
 	}
+}
+
+/* reset cube */
+void reset_cube(int cube[6][9]) 
+{
+	copy_cube(solved_cube, cube);
 }
 
 
@@ -444,18 +469,32 @@ void shuffle_cube(int cube[6][9])
 	}
 }
 
-/* check if the cube is solved, returns 1 when it is not solved, 0 when it is */
-int check_solved(int cube[6][9])
+/* compare a cube to another cube (the desired_state). 
+ * -1 values in the desired cube are not checked so that
+ *  partial matches can also be check (like only verify a row)
+ *  returns 0 if the cube matches, otherwise how much pieces don't
+ */
+int count_mismatches(int cube[6][9], int desired_state[6][9])
 {
-	int face, piece, success;
+	int face, piece, success, not_matching = 0;
 	for (face = 0; face < 6; face++) {
 		for (piece = 0; piece < 9; piece++) {
-			if (cube[face][piece] != solved_cube[face][piece]) {
-				return 1;
+			/* skip checking pieces we don't care about */
+			if (desired_state[face][piece] == -1) {
+				continue;
+			}
+			if (cube[face][piece] != desired_state[face][piece]) {
+				not_matching++;
 			}
 		}
 	}
-	return 0;
+	return not_matching;
+}
+
+/* check if the cube is solved, returns 1 when it is not solved, 0 when it is */
+int check_solved(int cube[6][9])
+{
+	return count_mismatches(cube, solved_cube);
 }
 
 void print_cube_solved_status(int cube[6][9])
@@ -476,16 +515,123 @@ void instantiate_cube(int cube[6][9])
 	print_cube(cube);
 	print_cube_solved_status(cube);
 
-	//printf("shuffling cube\n");
-	//shuffle_cube(cube);
-	//print_cube(cube);
-	//print_cube_solved_status(cube);
+	printf("shuffling cube\n");
+	shuffle_cube(cube);
+	print_cube(cube);
+	print_cube_solved_status(cube);
+}
+
+/* try the pattern 4 times until it matches, return -1 if no match otherwise amount of tries */
+int try_pattern_loop(int cube[6][9], int pattern[6][9], const char *signmaster_sequence, int amount)
+{
+	int i;
+	/* try the pattern all the way around */
+	for (i = 0; i < amount; i++) {
+		perform_signmaster_rotation(cube, signmaster_sequence);
+		print_cube(cube);
+		if (count_mismatches(cube, pattern) == 0) {
+			return i + 1;
+		}
+	}
+	return -1;
+}
+
+/* put the white face on top, return how much moves it took */
+int put_white_face_on_top(int cube[6][9])
+{
+	int white_face_on_top_pattern[6][9] = {
+		{-1, -1, -1, -1, -1, -1, -1, -1, -1},
+		{-1, -1, -1, -1, -1, -1, -1, -1, -1},
+		{-1, -1, -1, -1, -1, -1, -1, -1, -1},
+		{-1, -1, -1, -1, -1, -1, -1, -1, -1},
+		{-1, -1, -1, -1, -1, -1, -1, -1, -1},
+		{-1, -1, -1, -1, 0, -1, -1, -1, -1}
+	};
+
+	int front_attempts, side_attempts, total_attempts;
+	/* try rotating the middle slice down all the way around */
+	front_attempts = try_pattern_loop(cube, white_face_on_top_pattern, "M", 4);
+	if (front_attempts != -1) {
+		return front_attempts;
+	} else {
+		/* try rotating the middle slice of the right side down until we've had all possibilities */
+		side_attempts = try_pattern_loop(cube, white_face_on_top_pattern, "S", 3);
+		if (side_attempts != -1) {
+			return side_attempts + 4;
+		} 
+	}
+	fprintf(stderr, "Failed to put the white face on top! Aborting..\n");
+	exit(EXIT_FAILURE);
+}
+
+/* try a move, see how far the mismatching to the pattern is,
+ * revert the move and then return the mismatching */
+int prospect_move_mismatching(int cube[6][9], int pattern[6][9], const char *signmaster_sequence)
+{
+	int temp_cube[6][9];
+       	copy_cube(temp_cube, cube);
+	perform_signmaster_rotation(temp_cube, signmaster_sequence);
+	return count_mismatches(temp_cube, pattern);
+}
+
+/* create a cross of white pieces on top of the cube, return how much moves it took */
+int put_white_edges_on_top(int cube[6][9])
+{
+	int white_edges_on_top_pattern[6][9] = {
+		{-1, -1, -1, -1, -1, -1, -1, 0, -1},
+		{-1, -1, -1, -1, -1, -1, -1, 1, -1},
+		{-1, -1, -1, -1, -1, -1, -1, 2, -1},
+		{-1, -1, -1, -1, -1, -1, -1, 3, -1},
+		{-1, -1, -1, -1, -1, -1, -1, -1, -1},
+		{-1, 0, -1, 0, 0, 0, -1, 0, -1}
+	};
+
+	int cur_mismatching, algo_1_mismatching, algo_2_mismatching, algo_3_mismatching, lowest;
+
+	while (count_mismatches(cube, white_edges_on_top_pattern) != 0) {
+		cur_mismatching = count_mismatches(cube, white_edges_on_top_pattern);
+		printf("Need to fix %d pieces before the white edges are on top\n", cur_mismatching);
+
+		/* trying the swapping algorithms to see if we can put a piece in the right spot
+		 * by finding the projected state with the lowest number of mismatching pieces */ 
+		algo_1_mismatching = prospect_move_mismatching(cube, white_edges_on_top_pattern, "FR'D'RF'F'");
+		algo_2_mismatching = prospect_move_mismatching(cube, white_edges_on_top_pattern, "F'R'D'RF'F'");
+		algo_3_mismatching = prospect_move_mismatching(cube, white_edges_on_top_pattern, "R'D'RF'F'");
+
+		lowest = cur_mismatching;
+		if (algo_1_mismatching < lowest) {
+			lowest = algo_1_mismatching;
+			perform_signmaster_rotation(cube, "FR'D'RF'F'");
+			continue;
+		} 
+		if (algo_2_mismatching < lowest) {
+			lowest = algo_2_mismatching;
+			perform_signmaster_rotation(cube, "F'R'D'RF'F'");
+			continue;
+		} 
+		if (algo_3_mismatching < lowest) {
+			lowest = algo_3_mismatching;
+			perform_signmaster_rotation(cube, "R'D'RF'F'");
+			continue;
+		} 
+		fprintf(stderr, "The put white edges on top algorithm is not finished yet. Will loop indef. Aborting..\n");
+		exit(EXIT_FAILURE);
+	}
+}
+
+void yellow_cross_solver(int cube[6][9])
+{
+	int step_0_moves, step_1_moves;
+	step_0_moves = put_white_face_on_top(cube);
+	printf("Putting the white face on top took %d moves\n", step_0_moves);
+	step_1_moves = put_white_edges_on_top(cube);
+	printf("Putting the white edges on top took %d moves\n", step_1_moves);
 }
 
 int main (int argc, char** argv)
 {
 	/* not very random but that's ok */
-	srand(time(NULL));
+	srand(getpid());
 
 	/* the cube consists of 6 faces, each with 9 pieces
 	   the pieces go from 0 (bottom left) to 9 (top right)
@@ -496,12 +642,8 @@ int main (int argc, char** argv)
 	int cube[6][9];
 	instantiate_cube(cube);
 
-	perform_signmaster_rotation(cube, "F");
-	print_cube(cube);
-	print_cube_solved_status(cube);
+	yellow_cross_solver(cube);
 
-	perform_signmaster_rotation(cube, "F'");
-	print_cube(cube);
 	print_cube_solved_status(cube);
 
 
