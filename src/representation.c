@@ -45,8 +45,8 @@ void print_cube(int cube[6][9])
      printf("  /  %c %c %c / | \n",     faces[5][8], faces[5][7], faces[5][6]);
      printf(" +--------+%c%c%c ",       faces[1][6], faces[1][7], faces[1][8]);
      printf(" +--------+%c%c%c \n",     faces[3][6], faces[3][7], faces[3][8]);
-     printf(" |     |%c%c%c ",       faces[1][3], faces[1][4], faces[1][5]);
-     printf(" |     |%c%c%c \n",     faces[3][3], faces[3][4], faces[3][5]);
+     printf(" |        |%c%c%c ",       faces[1][3], faces[1][4], faces[1][5]);
+     printf(" |        |%c%c%c \n",     faces[3][3], faces[3][4], faces[3][5]);
      printf(" |%c  %c  %c |%c%c%c ",    faces[0][6], faces[0][7], faces[0][8], 
                             faces[1][0], faces[1][1], faces[1][2]);
      printf(" |%c  %c  %c |%c%c%c \n",  faces[2][6], faces[2][7], faces[2][8], 
@@ -64,7 +64,7 @@ void print_cube(int cube[6][9])
      printf("   / %c %c %c  /| \n",       faces[4][3], faces[4][4], faces[4][5]);
      printf("  /  %c %c %c / | \n",       faces[4][0], faces[4][1], faces[4][2]);
      printf(" +--------+%c%c%c \n",       faces[3][2], faces[3][1], faces[3][0]);
-     printf(" |     |%c%c%c \n",       faces[3][5], faces[3][4], faces[3][3]);
+     printf(" |        |%c%c%c \n",       faces[3][5], faces[3][4], faces[3][3]);
      printf(" |%c  %c  %c |%c%c%c \n",    faces[0][2], faces[0][1], faces[0][0], faces[3][8], faces[3][7], faces[3][6]);
      printf(" |%c  %c  %c | /  \n",       faces[0][5], faces[0][4], faces[0][3]);
      printf(" |%c  %c  %c |/   \n",       faces[0][8], faces[0][7], faces[0][6]);
