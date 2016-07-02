@@ -54,3 +54,8 @@ tried 1000000 rotations
  +--------+     +--------+    
 cube is not solved :(
 ```
+
+# Installation
+```
+$ ./bootstrap && ./configure && make
+```
