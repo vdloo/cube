@@ -4,6 +4,7 @@
 #include "operations.h"
 #include "representation.h"
 #include "rotations.h"
+#include "status.h"
 #include "patterns.h"
 
 /* copy cube */
