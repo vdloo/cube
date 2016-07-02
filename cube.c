@@ -19,26 +19,6 @@ char color2letter(int color)
 	return colors[color][0];
 }
 
-/* in c the % operator is 'remainder', not 'modulo'. because I'm 
-   trying to get the modulo with a negative number the difference 
-   is visible. remainder: -1 % 4 == -1 (floor division), modulo: -1 % 4 == 3
-   this function implements modulo like % in python2 and modulo in racket
-*/
-int mod(int a, int b)
-{
-	int ret;
-	if (b < 0) {
-		ret = mod(-a, -b);
-	} else {
-		ret = a % b;
-		if (ret < 0) {
-			ret += b;
-		}
-	}	
-	return ret;
-}
-
-
 /* prints a 3d view of the cube, shows 3 sides */
 void print_cube(int cube[6][9])
 {
@@ -79,215 +59,283 @@ void print_cube(int cube[6][9])
 	printf(" |%c  %c  %c |/   \n",     faces[2][0], faces[2][1], faces[2][2]);
 	printf(" +--------+    ");
 	printf(" +--------+    \n");
+
+	/* print the upside down cube, front view and 180 deg tilted right view. 
+	   shows 5 sides of the cube */
+	printf("    +%c-%c-%c---+ \n",       faces[4][6], faces[4][7], faces[4][8]);
+	printf("   / %c %c %c  /| \n",       faces[4][3], faces[4][4], faces[4][5]);
+	printf("  /  %c %c %c / | \n",       faces[4][0], faces[4][1], faces[4][2]);
+	printf(" +--------+%c%c%c \n",       faces[3][2], faces[3][1], faces[3][0]);
+	printf(" |        |%c%c%c \n",       faces[3][5], faces[3][4], faces[3][3]);
+	printf(" |%c  %c  %c |%c%c%c \n",    faces[0][2], faces[0][1], faces[0][0], faces[3][8], faces[3][7], faces[3][6]);
+	printf(" |%c  %c  %c | /  \n",       faces[0][5], faces[0][4], faces[0][3]);
+	printf(" |%c  %c  %c |/   \n",       faces[0][8], faces[0][7], faces[0][6]);
+	printf(" +--------+    \n");
 }
 
-/* translate the rotation translation to a vertical movement */
-int translate_vertical(int face)
+void rotate_surface2(int cube[6][9], int surface, int clockwise)
 {
-	/* 0 is the white face */
-	/* 5 is the top face */
-	/* 2 is the yellow face */
-	/* 4 is the bottom face */
-	if (face == 1) {
-		return 5;
-	} else if (face == 3) {
-		return 4;
+	/* bottom left, middle and right */
+	char temp_b_l = cube[surface][0];
+	char temp_b_m = cube[surface][1];
+	char temp_b_r = cube[surface][2];
+
+	/* middle left and right */
+	char temp_m_l = cube[surface][3];
+	char temp_m_r = cube[surface][5];
+
+	/* top left, middle and right */
+	char temp_t_l = cube[surface][6];
+	char temp_t_m = cube[surface][7];
+	char temp_t_r = cube[surface][8];
+
+	if (clockwise) {
+	/* rotate to the right
+	   6 7 8    0 3 6
+	   3 4 5 -> 1 4 7
+	   0 1 2    2 5 8 */
+		cube[surface][0] = temp_b_r;
+		cube[surface][1] = temp_m_r;
+		cube[surface][2] = temp_t_r;
+
+		cube[surface][3] = temp_b_m;
+		cube[surface][5] = temp_t_m;
+
+		cube[surface][6] = temp_b_l;
+		cube[surface][7] = temp_m_l;
+		cube[surface][8] = temp_t_l;
+
 	} else {
-		return face;
+	/* rotate to the left
+	   6 7 8    8 5 2
+	   3 4 5 -> 7 4 1
+	   0 1 2    6 3 0 */
+		cube[surface][0] = temp_t_l;
+		cube[surface][1] = temp_m_l;
+		cube[surface][2] = temp_b_l;
+
+		cube[surface][3] = temp_t_m;
+		cube[surface][5] = temp_b_m;
+
+		cube[surface][6] = temp_t_r;
+		cube[surface][7] = temp_m_r;
+		cube[surface][8] = temp_b_r;
 	}
 }
 
-/* for a vertical swap the orientation of the piece has to be changed 
-   for example: the bottom left piece of the top face is no longer the bottom
-   left piece when swapped with the back face (yellow from the white face 
-   perspective), it then has become the top right piece */
-int translate_destination_piece(int swap_face, int next_face, int piece)
+void rotate_left_right(int cube[6][9], int layer, int clockwise)
 {
-	if (swap_face == 5 && next_face == 2) {
-		/* swapping the top with the back (rotate up) */
-		return 8 - piece;
-	} else if (swap_face == 4 && next_face == 2) {
-		/* swapping the bottom with the back (rotate down) */
-		return 8 - piece;
+	/* comments assume 
+	 * rotation U:  rotate_left_right(cube, 2, 0) 
+	 * and reverse
+	 * rotation U': rotate_left_right(cube, 2, 1)  */
+	int layer_padding = layer * 3;
+
+	/* front top left, middle and right */
+	char temp_f_l = cube[0][layer_padding];
+	char temp_f_m = cube[0][layer_padding + 1];
+	char temp_f_r = cube[0][layer_padding + 2];
+
+	/* right top left, middle and right */
+	char temp_r_l = cube[1][layer_padding];
+	char temp_r_m = cube[1][layer_padding + 1];
+	char temp_r_r = cube[1][layer_padding + 2];
+
+	/* back top left, middle and right */
+	char temp_b_l = cube[2][layer_padding];
+	char temp_b_m = cube[2][layer_padding + 1];
+	char temp_b_r = cube[2][layer_padding + 2];
+
+	/* left top left, middle and right */
+	char temp_l_l = cube[3][layer_padding];
+	char temp_l_m = cube[3][layer_padding + 1];
+	char temp_l_r = cube[3][layer_padding + 2];
+
+	if (clockwise) {
+		/* put right top row on front top row */
+		cube[0][layer_padding]     = temp_l_l;
+		cube[0][layer_padding + 1] = temp_l_m;
+		cube[0][layer_padding + 2] = temp_l_r;
+
+		/* put back top row on right top row */
+		cube[1][layer_padding]     = temp_f_l;
+		cube[1][layer_padding + 1] = temp_f_m;
+		cube[1][layer_padding + 2] = temp_f_r;
+
+		/* put left top row on back top row */
+		cube[2][layer_padding]     = temp_r_l;
+		cube[2][layer_padding + 1] = temp_r_m;
+		cube[2][layer_padding + 2] = temp_r_r;
+
+		/* put front top row on left top row */
+		cube[3][layer_padding]     = temp_b_l;
+		cube[3][layer_padding + 1] = temp_b_m;
+		cube[3][layer_padding + 2] = temp_b_r;
 	} else {
-		/* not doing a vertical translation that requires an orientation change */
-		return piece;
+		/* put right top row on front top row */
+		cube[0][layer_padding]     = temp_r_l;
+		cube[0][layer_padding + 1] = temp_r_m;
+		cube[0][layer_padding + 2] = temp_r_r;
+
+		/* put back top row on right top row */
+		cube[1][layer_padding]     = temp_b_l;
+		cube[1][layer_padding + 1] = temp_b_m;
+		cube[1][layer_padding + 2] = temp_b_r;
+
+		/* put left top row on back top row */
+		cube[2][layer_padding]     = temp_l_l;
+		cube[2][layer_padding + 1] = temp_l_m;
+		cube[2][layer_padding + 2] = temp_l_r;
+
+		/* put front top row on left top row */
+		cube[3][layer_padding]     = temp_f_l;
+		cube[3][layer_padding + 1] = temp_f_m;
+		cube[3][layer_padding + 2] = temp_f_r;
 	}
 }
 
-int translate_source_piece(int swap_face, int next_face, int piece)
+void rotate_up_down(int cube[6][9], int layer, int clockwise)
 {
-	if (swap_face == 2 && next_face == 4) {
-		/* swapping the back with the bottom (rotate up) */
-		return 8 - piece;
-	} else if (swap_face == 2 && next_face == 5) {
-		/* swapping the back with the top (rotate down) */
-		return 8 - piece;
+	/* comments assume 
+	 * rotation R:  rotate_up_down(cube, 2, 1) 
+	 * and reverse
+	 * rotation R': rotate_up_down(cube, 2, 0)  */
+	int layer_padding = layer;
+
+	/* front right bottom, middle and top */
+	char temp_f_b = cube[0][layer_padding];
+	char temp_f_m = cube[0][layer_padding + 3];
+	char temp_f_t = cube[0][layer_padding + 6];
+
+	/* top right bottom, middle and top */
+	char temp_t_b = cube[5][layer_padding];
+	char temp_t_m = cube[5][layer_padding + 3];
+	char temp_t_t = cube[5][layer_padding + 6];
+
+	/* back right (left) bottom, middle and top
+	 * The orientation changes here so we need to substract
+	 * the piece number from 8 so we get the inverted piece */
+	char temp_b_b = cube[2][8 - layer_padding];
+	char temp_b_m = cube[2][8 - (layer_padding + 3)];
+	char temp_b_t = cube[2][8 - (layer_padding + 6)];
+
+	/* bottom right (left) bottom, middle and top */
+	char temp_o_b = cube[4][8 - layer_padding];
+	char temp_o_m = cube[4][8 - (layer_padding + 3)];
+	char temp_o_t = cube[4][8 - (layer_padding + 6)];
+
+	if (clockwise) {
+		/* put bottom right row on front right row */
+		cube[0][layer_padding]     = temp_o_b;
+		cube[0][layer_padding + 3] = temp_o_m;
+		cube[0][layer_padding + 6] = temp_o_t;
+
+		/* put front right row on top right row */
+		cube[5][layer_padding]     = temp_f_b;
+		cube[5][layer_padding + 3] = temp_f_m;
+		cube[5][layer_padding + 6] = temp_f_t;
+
+		/* put top right row on back right row */
+		cube[2][8 - layer_padding]       = temp_t_b;
+		cube[2][8 - (layer_padding + 3)] = temp_t_m;
+		cube[2][8 - (layer_padding + 6)] = temp_t_t;
+
+		/* put back right row on bottom right row */
+		cube[4][8 - layer_padding]       = temp_b_b;
+		cube[4][8 - (layer_padding + 3)] = temp_b_m;
+		cube[4][8 - (layer_padding + 6)] = temp_b_t;
 	} else {
-		/* not doing a vertical translation that requires an orientation change */
-		return piece;
+		/* put top right row on front right row */
+		cube[0][layer_padding]     = temp_t_b;
+		cube[0][layer_padding + 3] = temp_t_m;
+		cube[0][layer_padding + 6] = temp_t_t;
+
+		/* put back right row on top right row */
+		cube[5][layer_padding]     = temp_b_b;
+		cube[5][layer_padding + 3] = temp_b_m;
+		cube[5][layer_padding + 6] = temp_b_t;
+
+		/* put bottom right row on back right row */
+		cube[2][8 - layer_padding]       = temp_o_b;
+		cube[2][8 - (layer_padding + 3)] = temp_o_m;
+		cube[2][8 - (layer_padding + 6)] = temp_o_t;
+
+		/* put front right row on bottom right row */
+		cube[4][8 - layer_padding]       = temp_f_b;
+		cube[4][8 - (layer_padding + 3)] = temp_f_m;
+		cube[4][8 - (layer_padding + 6)] = temp_f_t;
 	}
 }
 
-const int left_surface_rotate_mapping[9] = {
-	/* bottom layer */
-	6, 3, 0,
-	/* middle layer */
-	7, 4, 1,
-	/* top layer */
-	8, 5, 2
-};
-
-const int right_surface_rotate_mapping[9] = {
-	/* bottom layer */
-	2, 5, 8,
-	/* middle layer */
-	1, 4, 7,
-	/* top layer */
-	0, 3, 6
-};
-
-/* rotate the surface of a face 90 degrees 
-   direction == 0 -> left rotate:
-   6 7 8  0 3 6
-   3 4 5  1 4 7
-   0 1 2  2 5 8
-
-   direction == 1 -> right rotate:
-   8 5 2  6 7 8 
-   7 4 1  3 4 5
-   6 3 0  0 1 2 
-*/
-
-void rotate_surface(int cube[6][9], int face, int direction)
+void perform_u_normal(int cube[6][9])
 {
-	int piece, new_piece;
-	int tmp_face[9];
 
-	for (piece = 0; piece < 9; piece++) {
-		if (direction == 0) {
-		    if (face > 3 ) {
-		        /* rotate the other way on top an bottom (inverted faces) */
-		        new_piece = right_surface_rotate_mapping[piece];
-		    } else {
-		        new_piece = left_surface_rotate_mapping[piece];
-		    }
-		} else if(direction == 1) {
-		    if (face > 3 ) {
-		        /* rotate the other way on top an bottom (inverted faces) */
-		        new_piece = left_surface_rotate_mapping[piece];
-		    } else {
-		        new_piece = right_surface_rotate_mapping[piece];
-		    }
-		} 
-		tmp_face[piece] = cube[face][new_piece];
-	}
-	for (piece = 0; piece < 9; piece++) {
-		cube[face][piece] = tmp_face[piece];
-	}
+    rotate_left_right(cube, 2, 0);
+    rotate_surface2(cube, 5, 1);
 }
 
-/* rotate one of the 3 layers. bottom layer is 0, 
-   top layer is 2 for left/right, left layer 
-   is 0, right layer is 2 for up/down. 
-
-   direction 0 is left, 1 is right, 2 is down, 3 is up
-*/
-void rotate(int cube[6][9], int layer, int direction)
+void perform_u_reverse(int cube[6][9])
 {
-	/* loop over three sides of the cube (not four!) for the face that was specified */
-	int face, piece, source_piece, destination_piece, swap_face, next_face, 
-		initial_piece, piece_increment, max_piece;
-
-	/* if we are rotating horizontally, the initial piece is the product of layer and 3.
-	   if we are rotating vertically, the initial piece is the layer but the next 
-	   piece is the current piece plus 3 (because we go up a layer in the face). */
-	if (direction < 2) {
-		initial_piece = layer * 3;
-		piece_increment = 1;
-	} else {
-		initial_piece = layer;
-		piece_increment = 3;
-	}
-
-	for (face = 0; face < 3; face++) {
-		/* get the next face to swap with, pick the right face if direction 0 
-		   (rotate left), the left face if direction 1 (rotate right), the up
-		   face if direction 3 (rotate down), the down face if direction 3 
-		   (rotate up) */
-		if (mod(direction, 2) == 0) {
-			swap_face = face;
-			next_face = mod(swap_face + 1, 4);
-		} else {
-			swap_face = 3 - face;
-			next_face = mod(swap_face - 1, 4);
-		}
-
-		/* if we are rotating up or down instead of left or right, we
-		   need to translate the movement to vertical instead of horizontal */
-		if (direction > 1) {
-			next_face = translate_vertical(next_face);
-			swap_face = translate_vertical(swap_face);
-		}
-
-
-		/* for every piece on the layer of the face that was specified,
-		   bitwise XOR three times to swap the values. this way we swap the
-		   value of piece x on face A with B, B with C and C with D etc. 
-		   XOR swap: https://en.wikipedia.org/wiki/XOR_swap_algorithm
-		   note: a temp var is faster on modern CPUs but this is just cool
-		*/
-		max_piece = initial_piece + (3 * piece_increment);
-		for (piece = initial_piece; piece < max_piece; piece = piece + piece_increment) {
-			source_piece = translate_source_piece(swap_face, next_face, piece);
-			destination_piece = translate_destination_piece(swap_face, next_face, piece);
-			cube[swap_face][source_piece] = cube[swap_face][source_piece] ^ cube[next_face][destination_piece];
-			cube[next_face][destination_piece] = cube[swap_face][source_piece] ^ cube[next_face][destination_piece];
-			cube[swap_face][source_piece] = cube[swap_face][source_piece] ^ cube[next_face][destination_piece];
-		}
-		
-	}
-	/* if a side layer is rotated, also rotate the surface */
-	if (layer == 0) {
-		switch(direction) {
-			case 0:
-				/* rotate face 4 (bottom) left */
-				rotate_surface(cube, 4, 0);
-				break;
-			case 1:
-				/* rotate face 4 (bottom) right */
-				rotate_surface(cube, 4, 1);
-				break;
-			case 2:
-				/* rotate face 3 (left) left */
-				rotate_surface(cube, 3, 0);
-				break;
-			case 3:
-				/* rotate face 3 (left) right */
-				rotate_surface(cube, 3, 1);
-				break;
-		}
-	} else if (layer == 2) {
-		switch(direction) {
-			case 0:
-				/* rotate face 5 (top) left */
-				rotate_surface(cube, 5, 0);
-				break;
-			case 1:
-				/* rotate face 5 (top) right */
-				rotate_surface(cube, 5, 1);
-				break;
-			case 2:
-				/* rotate face 1 (right) left */
-				rotate_surface(cube, 1, 0);
-				break;
-			case 3:
-				/* rotate face 1 (right) right */
-				rotate_surface(cube, 1, 1);
-				break;
-		}
-	}
+    rotate_left_right(cube, 2, 1);
+    rotate_surface2(cube, 5, 0);
 }
+
+void perform_d_normal(int cube[6][9])
+{
+    rotate_left_right(cube, 0, 1);
+    rotate_surface2(cube, 4, 1);
+}
+
+void perform_d_reverse(int cube[6][9])
+{
+    rotate_left_right(cube, 0, 0);
+    rotate_surface2(cube, 4, 0);
+}
+
+void perform_e_normal(int cube[6][9])
+{
+    rotate_left_right(cube, 1, 1);
+}
+
+void perform_e_reverse(int cube[6][9])
+{
+    rotate_left_right(cube, 1, 0);
+}
+
+void perform_r_normal(int cube[6][9])
+{
+    rotate_up_down(cube, 2, 1);
+    rotate_surface2(cube, 1, 1);
+}
+
+void perform_r_reverse(int cube[6][9])
+{
+    rotate_up_down(cube, 2, 0);
+    rotate_surface2(cube, 1, 0);
+}
+
+void perform_l_normal(int cube[6][9])
+{
+    rotate_up_down(cube, 0, 0);
+    rotate_surface2(cube, 3, 1);
+}
+
+void perform_l_reverse(int cube[6][9])
+{
+    rotate_up_down(cube, 0, 1);
+    rotate_surface2(cube, 3, 0);
+}
+
+void perform_m_normal(int cube[6][9])
+{
+    rotate_up_down(cube, 1, 0);
+}
+
+void perform_m_reverse(int cube[6][9])
+{
+    rotate_up_down(cube, 1, 1);
+}
+
 
 /* prototype for rotation because we do mutual recursion between perform_signmaster_rotation and rotation
  * and we need to be able to call it in perform_signmaster_rotation before defining it */
@@ -319,19 +367,31 @@ void perform_signmaster_rotation(int cube[6][9], const char *signmaster_sequence
 
 void rotation(int cube[6][9], char signmaster_letter, int reverse)
 {
-	/* For the beginner’s method you just have to know the simple 
+	/* For the beginner's method you just have to know the simple 
 	   F (front), B (back), R (right), L (left), D (down), U (up), 
 	   so for now let's only implement those.
 	   see: https://ruwix.com/the-rubiks-cube/notation/ */
 	switch(signmaster_letter) {
 		case 'U':
-			rotate(cube, 2, reverse);
+			if (reverse) {
+				perform_u_reverse(cube);
+			} else {
+				perform_u_normal(cube);
+			}
 			break;
 		case 'L':
-			rotate(cube, 0, reverse + 2);
+			if (reverse) {
+				perform_l_reverse(cube);
+			} else {
+				perform_l_normal(cube);
+			}
 			break;
 		case 'M':
-			rotate(cube, 1, reverse + 2);
+			if (reverse) {
+				perform_m_reverse(cube);
+			} else {
+				perform_m_normal(cube);
+			}
 			break;
 		case 'S':
 			// flip cube 90 deg to the left
@@ -345,6 +405,7 @@ void rotation(int cube[6][9], char signmaster_letter, int reverse)
 			}
 			// flip cube back 90 deg to the left
 			perform_signmaster_rotation(cube, "U'ED");
+			break;
 		case 'F':
 			// flip cube 90 deg to the left
 			perform_signmaster_rotation(cube, "UE'D'");
@@ -359,7 +420,11 @@ void rotation(int cube[6][9], char signmaster_letter, int reverse)
 			perform_signmaster_rotation(cube, "U'ED");
 			break;
 		case 'R':
-			rotate(cube, 2, (1 - reverse) + 2);
+			if (reverse) {
+				perform_r_reverse(cube);
+			} else {
+				perform_r_normal(cube);
+			}
 			break;
 		case 'B':
 			perform_signmaster_rotation(cube, "UE'D'");
@@ -373,44 +438,23 @@ void rotation(int cube[6][9], char signmaster_letter, int reverse)
 			perform_signmaster_rotation(cube, "U'ED");
 			break;
 		case 'D':
-			rotate(cube, 0, (1 - reverse));
+			if (reverse) {
+				perform_d_reverse(cube);
+			} else {
+				perform_d_normal(cube);
+			}
 			break;
 		case 'E':
-			rotate(cube, 1, (1 - reverse));
+			if (reverse) {
+				perform_e_reverse(cube);
+			} else {
+				perform_e_normal(cube);
+			}
 			break;
 		default:
 			fprintf(stderr, "Signmaster rotation %c is not implemented! Aborting..\n", signmaster_letter);
 			exit(EXIT_FAILURE);
 	}
-}
-
-
-/* rotate one of the 3 layers to the left 
-   bottom layer is 0, top layer is 2 */
-void rotate_left(int cube[6][9], int layer)
-{
-	rotate(cube, layer, 0);
-}
-
-/* rotate one of the 3 layers to the right 
-   bottom layer is 0, top layer is 2 */
-void rotate_right(int cube[6][9], int layer)
-{
-	rotate(cube, layer, 1);
-}
-
-/* rotate one of the 3 layers downwards 
-   left layer is 0, right layer is 2 */
-void rotate_down(int cube[6][9], int layer)
-{
-	rotate(cube, layer, 2);
-}
-
-/* rotate one of the 3 layers upwards 
-   left layer is 0, right layer is 2 */
-void rotate_up(int cube[6][9], int layer)
-{
-	rotate(cube, layer, 3);
 }
 
 /* the solved cube looks like this */
@@ -440,24 +484,46 @@ void reset_cube(int cube[6][9])
 	copy_cube(cube, solved_cube);
 }
 
-
 void random_rotation(int cube[6][9])
 {
 	int random_rotation, random_layer;
-		random_rotation = rand() % 4;
-		random_layer = rand() % 3;
+		random_rotation = rand() % 11;
 		switch(random_rotation) {
 			case 0:
-				rotate_left(cube, random_layer);
+				perform_u_normal(cube);
 				break;
 			case 1:
-				rotate_right(cube, random_layer);
+				perform_u_reverse(cube);
 				break;
 			case 2:
-				rotate_down(cube, random_layer);
+				perform_m_normal(cube);
 				break;
 			case 3:
-				rotate_up(cube, random_layer);
+				perform_m_reverse(cube);
+				break;
+			case 4:
+				perform_d_normal(cube);
+				break;
+			case 5:
+				perform_d_reverse(cube);
+				break;
+			case 6:
+				perform_e_normal(cube);
+				break;
+			case 7:
+				perform_e_reverse(cube);
+				break;
+			case 8:
+				perform_r_normal(cube);
+				break;
+			case 9:
+				perform_r_reverse(cube);
+				break;
+			case 10:
+				perform_l_normal(cube);
+				break;
+			case 11:
+				perform_l_reverse(cube);
 				break;
 		}
 }
@@ -517,8 +583,6 @@ void instantiate_cube(int cube[6][9])
 	print_cube(cube);
 	print_cube_solved_status(cube);
 
-	printf("shuffling cube\n");
-	shuffle_cube(cube);
 	print_cube(cube);
 	print_cube_solved_status(cube);
 }
@@ -536,6 +600,16 @@ int main (int argc, char** argv)
 	   bottom face piece 9 is the corner of white face piece 9 */
 	int cube[6][9];
 	instantiate_cube(cube);
+
+	printf("performing superflip\n");
+        perform_signmaster_rotation(cube, "URRFBRBBRUULBBRU'D'RRFR'LBBUUFF");
+	print_cube(cube);
+	print_cube_solved_status(cube);
+
+	printf("performing superflip\n");
+        perform_signmaster_rotation(cube, "URRFBRBBRUULBBRU'D'RRFR'LBBUUFF");
+	print_cube(cube);
+	print_cube_solved_status(cube);
 
 	exit(EXIT_SUCCESS);
 }
