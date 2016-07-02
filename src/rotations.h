@@ -1,6 +1,8 @@
 #ifndef ROTATIONS_H
 #define ROTATIONS_H
 
+char *signmaster_rotations[9];
+
 void perform_u_normal(int cube[6][9]);
 
 void perform_u_reverse(int cube[6][9]);
