@@ -1,6 +1,21 @@
 # binary
-cube
+src/cube
 
 # vim
 *.swp
 *.swo
+
+# autotools
+*.Po
+*.log
+*.m4
+*.o
+*.so
+*.status
+/*.cache
+Makefile
+Makefile.in
+configure
+depcomp
+install-sh
+missing

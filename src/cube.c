@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 /* map colors to numbers. Western color scheme (blue-orange-yellow / minus yellow) */
 
@@ -343,10 +344,10 @@ void rotation(int cube[6][9], char signmaster_letter, int reverse);
 
 void perform_signmaster_rotation(int cube[6][9], const char *signmaster_sequence)
 {
-        int i, next_is_quote, cur_is_quote;
+        int next_is_quote, cur_is_quote;
 
         /* Loop over chars in the str until we hit the NULL terminator */
-        for (i = 0; *signmaster_sequence != '\0'; signmaster_sequence++) {
+	while (*signmaster_sequence != '\0') {
                 next_is_quote = *(signmaster_sequence + 1) == '\'';
                 cur_is_quote = *signmaster_sequence == '\'';
 
@@ -362,6 +363,7 @@ void perform_signmaster_rotation(int cube[6][9], const char *signmaster_sequence
                         // do normal rotation of the current
                         rotation(cube, *signmaster_sequence, 0);
                 }
+		signmaster_sequence++;
         }
 }
 
@@ -486,7 +488,7 @@ void reset_cube(int cube[6][9])
 
 void random_rotation(int cube[6][9])
 {
-        int random_rotation, random_layer;
+        int random_rotation;
                 random_rotation = rand() % 11;
                 switch(random_rotation) {
                         case 0:
@@ -544,7 +546,7 @@ void shuffle_cube(int cube[6][9])
  */
 int count_mismatches(int cube[6][9], int desired_state[6][9])
 {
-        int face, piece, success, not_matching = 0;
+        int face, piece, not_matching = 0;
         for (face = 0; face < 6; face++) {
                 for (piece = 0; piece < 9; piece++) {
                         /* skip checking pieces we don't care about */
@@ -587,7 +589,7 @@ void instantiate_cube(int cube[6][9])
         print_cube_solved_status(cube);
 }
 
-int main (int argc, char** argv)
+int main()
 {
         /* not very random but that's ok */
         srand(getpid());
