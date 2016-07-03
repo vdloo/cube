@@ -9,7 +9,7 @@
 #include "operations.h"
 #include "status.h"
 
-int iterative_deepening(int cube[6][9], int desired_state[6][9], const char *path, int depth)
+int look_at_depth(int cube[6][9], int desired_state[6][9], int depth, int history[])
 {
     int move, state;
     if (depth == 0) {
@@ -22,22 +22,11 @@ int iterative_deepening(int cube[6][9], int desired_state[6][9], const char *pat
 	return state;
     } else {
 	int test_cube[6][9];
-        char rev[2];
-
-	for (move = 0; move < 9; move++) {
+	for (move = 0; move < ALL_ROTATIONS; move++) {
 	    copy_cube(test_cube, cube);
+	    history[depth - 1] = move;
 	    perform_signmaster_rotation(test_cube, signmaster_rotations[move]);
-	    if (iterative_deepening(test_cube, desired_state, path, depth - 1) == 0) {
-               return 0; 
-	    }
-	}
-	for (move = 0; move < 9; move++) {
-	    copy_cube(test_cube, cube);
-	    memset(rev, '\0', sizeof(rev));
-	    strcpy(rev, signmaster_rotations[move]);
-	    strcat(rev, "'");
-	    perform_signmaster_rotation(test_cube, rev);
-	    if (iterative_deepening(test_cube, desired_state, path, depth - 1) == 0) {
+	    if (look_at_depth(test_cube, desired_state, depth - 1, history) == 0) {
                return 0; 
 	    }
 	}
@@ -45,9 +34,39 @@ int iterative_deepening(int cube[6][9], int desired_state[6][9], const char *pat
     return 1;
 }
 
+int iterative_deepening(int cube[6][9], int destination_cube[6][9], int max_depth)
+{
+     int depth = 1;
+
+     int history[max_depth], i;
+     for (i = 0; i < max_depth; i++) {
+         history[i] = -1;
+     }
+
+     while (look_at_depth(cube, destination_cube, depth, history) != 0) {
+         if (depth >= max_depth) {
+	     printf("Not allowed to look further than %d moves. Did not find a solution.\n", max_depth);
+             return 1;
+         }
+         depth++;
+	 printf("checking %d levels deep\n", depth);
+     }
+
+     printf("Found a solution, path is: ");
+     int move;
+     for (i = max_depth; i > 0; i--) {
+         move = history[i - 1]; 
+	 if (move != -1) {
+             printf("%s", signmaster_rotations[move]);
+	 }
+     }
+     printf("\n");
+     return 0;
+}
+
 int main()
 {
-     /* not very random but that's ok */
+     /* not very random but that's ok */ 
      srand(getpid());
 
      /* the cube consists of 6 faces, each with 9 pieces
@@ -59,18 +78,13 @@ int main()
      int cube[6][9];
      instantiate_cube(cube);
 
-     printf("performing R\n");
-     perform_signmaster_rotation(cube, "ULURUDU");
+     printf("\nperforming DLFUR'MEL'\n");
+     perform_signmaster_rotation(cube, "DLFUR'MEL'");
      print_cube(cube);
      print_cube_solved_status(cube);
 
      printf("Finding a solution\n");
-
-     int depth = 1;
-     while (iterative_deepening(cube, solved_cube, "notyetapath", depth) != 0) {
-	 printf("checking %d levels deep\n", depth);
-         depth++;
-     }
+     iterative_deepening(cube, solved_cube, 8);
 
      exit(EXIT_SUCCESS);
 }

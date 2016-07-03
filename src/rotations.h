@@ -1,7 +1,9 @@
 #ifndef ROTATIONS_H
 #define ROTATIONS_H
 
-char *signmaster_rotations[9];
+#define ALL_ROTATIONS 18
+
+char *signmaster_rotations[ALL_ROTATIONS];
 
 void perform_u_normal(int cube[6][9]);
 
