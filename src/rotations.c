@@ -5,7 +5,17 @@
 #include "rotations.h"
 
 /* all implemented individual rotations */
-char *signmaster_rotations[9] = {"U", "L", "M", "S", "F", "R", "B", "D", "E"};
+char *signmaster_rotations[ALL_ROTATIONS] = {
+	"U", "U'",
+	"L", "L'",
+	"M", "M'",
+       	"S", "S'",
+       	"F", "F'",
+       	"R", "R'",
+       	"B", "B'",
+       	"D", "D'",
+       	"E", "E'"
+};
 
 void perform_u_normal(int cube[6][9])
 {
