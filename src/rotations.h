@@ -1,7 +1,7 @@
 #ifndef ROTATIONS_H
 #define ROTATIONS_H
 
-#define ALL_ROTATIONS 18
+#define ALL_ROTATIONS 33
 
 char *signmaster_rotations[ALL_ROTATIONS];
 

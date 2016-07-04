@@ -18,6 +18,24 @@ void copy_cube(int destination_cube[6][9], int source_cube[6][9])
      }
 }
 
+void merge_patterns(int destination_cube[6][9], int source_cube[6][9])
+{
+    int face, piece;
+    for (face = 0; face < 6; face++) {
+        for (piece = 0; piece < 9; piece++) {
+            if (destination_cube[face][piece] == -1 && source_cube[face][piece] != -1) {
+	        destination_cube[face][piece] = source_cube[face][piece];
+	    }
+	    else if (destination_cube[face][piece] != -1 && source_cube[face][piece] == -1) {
+	        destination_cube[face][piece] = destination_cube[face][piece];
+            } else if (destination_cube[face][piece] != source_cube[face][piece]) {
+	         fprintf(stderr, "Tried to merge two patterns with conflicting pieces!\n");
+	         exit(EXIT_FAILURE);
+	    }
+        }
+    }
+}
+
 /* reset cube */
 void reset_cube(int cube[6][9]) 
 {
