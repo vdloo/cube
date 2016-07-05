@@ -10,7 +10,7 @@
  */
 int count_mismatches(int cube[6][9], int desired_state[6][9])
 {
-     int face, piece, not_matching = 0;
+     int face, piece, weight, not_matching = 0;
      for (face = 0; face < 6; face++) {
           for (piece = 0; piece < 9; piece++) {
                /* skip checking pieces we don't care about */
@@ -18,7 +18,15 @@ int count_mismatches(int cube[6][9], int desired_state[6][9])
                     continue;
                }
                if (cube[face][piece] != desired_state[face][piece]) {
-                    not_matching++;
+		    weight = 0;
+		    if (piece == 4) {
+			/* when a middle piece doesn't align, count that heavier than any other piece */
+			weight = weight + 10;
+		    } else {
+                        not_matching++;
+			weight++;
+		    }
+	            not_matching = not_matching + weight;
                }
           }
      }

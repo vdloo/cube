@@ -6,6 +6,7 @@
 
 /* all implemented individual rotations */
 char *signmaster_rotations[ALL_ROTATIONS] = {
+	/* face rotations and slice turns */
 	"U", "U'",
 	"L", "L'",
 	"M", "M'",
@@ -14,7 +15,25 @@ char *signmaster_rotations[ALL_ROTATIONS] = {
        	"R", "R'",
        	"B", "B'",
        	"D", "D'",
-       	"E", "E'"
+       	"E", "E'",
+
+	/* whle cube rotations */
+       	"X", "X'",
+	"Y", "Y'",
+       	"Z", "Z'",
+
+	"URU'R'U'F'UF",
+	"U'L'ULUFU'F'",
+
+	/* beginners method algorithms */
+
+	"FRUR'U'F'",
+	"RUR'URUUR'U",
+	"URU'L'UR'U'L",
+	"R'D'RD",
+	"FDF'",
+	"R'DDRDR'D'R",
+	"R'D'R",
 };
 
 void perform_u_normal(int cube[6][9])
@@ -197,6 +216,27 @@ void rotation(int cube[6][9], char signmaster_letter, int reverse)
                 perform_e_normal(cube);
             }
             break;
+	case 'X':
+            if (reverse) {
+                perform_signmaster_rotation(cube, "R'ML");
+            } else {
+                perform_signmaster_rotation(cube, "RM'L'");
+            }
+	    break;
+	case 'Y':
+            if (reverse) {
+                perform_signmaster_rotation(cube, "DEU'");
+            } else {
+                perform_signmaster_rotation(cube, "D'E'U");
+            }
+	    break;
+	case 'Z':
+            if (reverse) {
+                perform_signmaster_rotation(cube, "F'S'B");
+            } else {
+                perform_signmaster_rotation(cube, "FSB'");
+            }
+	    break;
         default:
             fprintf(stderr, "Signmaster rotation %c is not implemented! Aborting..\n", signmaster_letter);
             exit(EXIT_FAILURE);
