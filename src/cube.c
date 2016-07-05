@@ -37,7 +37,7 @@ int look_at_depth(int cube[6][9], int desired_state[6][9], int depth, int distan
 
 int iterative_deepening(int cube[6][9], int destination_cube[6][9], int distance, int max_depth)
 {
-     int depth = 1;
+     int depth = 0;
 
      int history[max_depth], i;
      for (i = 0; i < max_depth; i++) {
@@ -81,23 +81,26 @@ void yellow_cross_solver(int cube[6][9])
      printf("\nCreating the white cross pattern by aligning one edge\n");
      merge_patterns(pattern, front_white_edge_on_top_pattern);
      iterative_deepening(cube, pattern, 0, 8);
+     print_cube(pattern);
      print_cube(cube);
 
      printf("\nCreating the white cross pattern by aligning two edges\n");
      merge_patterns(pattern, right_white_edge_on_top_pattern);
      iterative_deepening(cube, pattern, 0, 8);
+     print_cube(pattern);
      print_cube(cube);
 
      printf("\nCreating the white cross pattern by aligning three edges\n");
      merge_patterns(pattern, back_white_edge_on_top_pattern);
      iterative_deepening(cube, pattern, 0, 8);
+     print_cube(pattern);
      print_cube(cube);
 
      printf("\nCreating the white cross pattern by aligning four edges\n");
      merge_patterns(pattern, left_white_edge_on_top_pattern);
      print_cube(pattern);
      iterative_deepening(cube, pattern, 0, 8);
-     print_cube(cube);
+    // print_cube(cube);
 
      printf("\nSolving the first layer by aligning one corner\n");
      merge_patterns(pattern, one_white_corners_on_top_pattern);
