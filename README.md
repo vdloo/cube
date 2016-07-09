@@ -7,56 +7,24 @@ Rubik's cube solver in C.
 
 Make your computer try to solve the cube:
 ```
-$ time ./src/cube
-start cube looks like:
-    front         180° ↺         180° ↶
-   +b-b-b---+     +b-b-b---+     +g-g-g---+ 
-  / b b b  /|    / b b b  /|    / g g g  /| 
- /  b b b / |   /  b b b / |   /  g g g / | 
-+--------+rrr  +--------+ooo  +--------+ooo 
-|        |rrr  |        |ooo  |        |ooo 
-|w  w  w |rrr  |y  y  y |ooo  |w  w  w |ooo 
-|w  w  w | /   |y  y  y | /   |w  w  w | /  
-|w  w  w |/    |y  y  y |/    |w  w  w |/   
-+--------+     +--------+     +--------+    
-cube is solved!
+$ # 5.5 second world record scramble
+$ time ./src/cube "DDU'RRUFFDDU'RRU'B'LLR'B'DDUBBL'D'RR"
+...
 
-performing DLFUR'MEL'
+Cube pre-solved state: 
     front         180° ↺         180° ↶
-   +y-r-r---+     +y-o-o---+     +w-w-w---+ 
-  / y y y  /|    / y y y  /|    / w w w  /| 
- /  o o y / |   /  r r y / |   /  r r g / | 
-+--------+grw  +--------+bgg  +--------+ygb 
-|        |obb  |        |bgo  |        |ogb 
-|w  y  r |ybb  |g  g  o |bgy  |b  b  o |ggb 
-|w  o  g | /   |y  r  o | /   |g  o  w | /  
-|o  b  b |/    |r  r  o |/    |r  y  w |/   
+   +g-g-r---+     +o-r-o---+     +w-y-b---+ 
+  / o b b  /|    / b b o  /|    / r g y  /| 
+ /  o r o / |   /  r g g / |   /  y b y / | 
++--------+wwb  +--------+wgy  +--------+ggr 
+|        |oro  |        |yor  |        |roy 
+|g  g  g |oyo  |w  w  r |rgg  |b  r  r |ygw 
+|w  w  w | /   |b  y  b | /   |w  w  w | /  
+|r  r  b |/    |b  o  y |/    |g  g  g |/   
 +--------+     +--------+     +--------+    
-cube is not solved :(
+Solved cube with 53 moves: MR'D'RFFR'ULLFMU'L'ULUFU'F'M'R'URZURU'L'UR'U'LFRUR'U'F'Z'RU'R'L'ULFRUR'U'F'URU'R'U'F'UFR'RUR'URUUR'UFRUR'U'F'REURU'R'U'F'UFFRUR'U'F'U'L'ULUFU'F'E'UU'L'ULUFU'F'FRUR'U'F'FRUR'U'F'URUR'URUUR'UUURUR'URUUR'UFRUR'U'F'FRUR'U'F'FRUR'U'F'URU'L'UR'U'LF'URU'L'UR'U'LFX
 
-Finding a solution
-checking 2 levels deep
-checking 3 levels deep
-checking 4 levels deep
-checking 5 levels deep
-checking 6 levels deep
-checking 7 levels deep
-checking 8 levels deep
-Found a solution!
-    front         180° ↺         180° ↶
-   +b-b-b---+     +b-b-b---+     +g-g-g---+ 
-  / b b b  /|    / b b b  /|    / g g g  /| 
- /  b b b / |   /  b b b / |   /  g g g / | 
-+--------+rrr  +--------+ooo  +--------+ooo 
-|        |rrr  |        |ooo  |        |ooo 
-|w  w  w |rrr  |y  y  y |ooo  |w  w  w |ooo 
-|w  w  w | /   |y  y  y | /   |w  w  w | /  
-|w  w  w |/    |y  y  y |/    |w  w  w |/   
-+--------+     +--------+     +--------+    
-cube is solved!
-Found a solution, path is: LE'M'RU'F'L'D'
-
-real	5m43.150s
+real    0m7.327s
 ```
 
 # Building
