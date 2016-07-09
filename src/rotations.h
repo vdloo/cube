@@ -3,7 +3,7 @@
 
 #define ALL_ROTATIONS 33
 
-char *signmaster_rotations[ALL_ROTATIONS];
+char *singmaster_rotations[ALL_ROTATIONS];
 
 void perform_u_normal(int cube[6][9]);
 
@@ -29,8 +29,8 @@ void perform_m_normal(int cube[6][9]);
 
 void perform_m_reverse(int cube[6][9]);
 
-void rotation(int cube[6][9], char signmaster_letter, int reverse);
+void rotation(int cube[6][9], char singmaster_letter, int reverse);
 
-void perform_signmaster_rotation(int cube[6][9], const char *signmaster_sequence);
+void perform_singmaster_rotation(int cube[6][9], const char *singmaster_sequence);
 
 #endif

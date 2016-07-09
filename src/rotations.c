@@ -5,7 +5,7 @@
 #include "rotations.h"
 
 /* all implemented individual rotations */
-char *signmaster_rotations[ALL_ROTATIONS] = {
+char *singmaster_rotations[ALL_ROTATIONS] = {
 	/* face rotations and slice turns */
 	"U", "U'",
 	"L", "L'",
@@ -105,14 +105,14 @@ void perform_m_reverse(int cube[6][9])
     rotate_up_down(cube, 1, 1);
 }
 
-void perform_signmaster_rotation(int cube[6][9], const char *signmaster_sequence)
+void perform_singmaster_rotation(int cube[6][9], const char *singmaster_sequence)
 {
     int next_is_quote, cur_is_quote;
 
     /* Loop over chars in the str until we hit the NULL terminator */
-	while (*signmaster_sequence != '\0') {
-        next_is_quote = *(signmaster_sequence + 1) == '\'';
-        cur_is_quote = *signmaster_sequence == '\'';
+	while (*singmaster_sequence != '\0') {
+        next_is_quote = *(singmaster_sequence + 1) == '\'';
+        cur_is_quote = *singmaster_sequence == '\'';
 
         if (cur_is_quote && next_is_quote) {
             fprintf(stderr, "Signmaster sequence contains two consecutive apostrophes! Aborting..\n");
@@ -121,22 +121,22 @@ void perform_signmaster_rotation(int cube[6][9], const char *signmaster_sequence
 
         if (cur_is_quote) {
             // do reverse rotation of previous 
-            rotation(cube, *(signmaster_sequence - 1), 1);
+            rotation(cube, *(singmaster_sequence - 1), 1);
         } else if (!next_is_quote){
             // do normal rotation of the current
-            rotation(cube, *signmaster_sequence, 0);
+            rotation(cube, *singmaster_sequence, 0);
         }
-		signmaster_sequence++;
+		singmaster_sequence++;
     }
 }
 
-void rotation(int cube[6][9], char signmaster_letter, int reverse)
+void rotation(int cube[6][9], char singmaster_letter, int reverse)
 {
     /* For the beginner's method you just have to know the simple 
        F (front), B (back), R (right), L (left), D (down), U (up), 
        so for now let's only implement those.
        see: https://ruwix.com/the-rubiks-cube/notation/ */
-    switch(signmaster_letter) {
+    switch(singmaster_letter) {
         case 'U':
             if (reverse) {
                 perform_u_reverse(cube);
@@ -160,29 +160,29 @@ void rotation(int cube[6][9], char signmaster_letter, int reverse)
             break;
         case 'S':
             // flip cube 90 deg to the left
-            perform_signmaster_rotation(cube, "UE'D'");
+            perform_singmaster_rotation(cube, "UE'D'");
             if (reverse) {
                 // move up middle slice
-                perform_signmaster_rotation(cube, "M'");
+                perform_singmaster_rotation(cube, "M'");
             } else {
                 // move down middle slice
-                perform_signmaster_rotation(cube, "M");
+                perform_singmaster_rotation(cube, "M");
             }
             // flip cube back 90 deg to the left
-            perform_signmaster_rotation(cube, "U'ED");
+            perform_singmaster_rotation(cube, "U'ED");
             break;
         case 'F':
             // flip cube 90 deg to the left
-            perform_signmaster_rotation(cube, "UE'D'");
+            perform_singmaster_rotation(cube, "UE'D'");
             if (reverse) {
                 // move up left slice
-                perform_signmaster_rotation(cube, "L'");
+                perform_singmaster_rotation(cube, "L'");
             } else {
                 // move down left slice
-                perform_signmaster_rotation(cube, "L");
+                perform_singmaster_rotation(cube, "L");
             }
             // flip cube back 90 deg to the left
-            perform_signmaster_rotation(cube, "U'ED");
+            perform_singmaster_rotation(cube, "U'ED");
             break;
         case 'R':
             if (reverse) {
@@ -192,15 +192,15 @@ void rotation(int cube[6][9], char signmaster_letter, int reverse)
             }
             break;
         case 'B':
-            perform_signmaster_rotation(cube, "UE'D'");
+            perform_singmaster_rotation(cube, "UE'D'");
             if (reverse) {
                 // move up right slice
-                perform_signmaster_rotation(cube, "R'");
+                perform_singmaster_rotation(cube, "R'");
             } else {
                 // move down right slice
-                perform_signmaster_rotation(cube, "R");
+                perform_singmaster_rotation(cube, "R");
             }
-            perform_signmaster_rotation(cube, "U'ED");
+            perform_singmaster_rotation(cube, "U'ED");
             break;
         case 'D':
             if (reverse) {
@@ -218,27 +218,27 @@ void rotation(int cube[6][9], char signmaster_letter, int reverse)
             break;
 	case 'X':
             if (reverse) {
-                perform_signmaster_rotation(cube, "R'ML");
+                perform_singmaster_rotation(cube, "R'ML");
             } else {
-                perform_signmaster_rotation(cube, "RM'L'");
+                perform_singmaster_rotation(cube, "RM'L'");
             }
 	    break;
 	case 'Y':
             if (reverse) {
-                perform_signmaster_rotation(cube, "DEU'");
+                perform_singmaster_rotation(cube, "DEU'");
             } else {
-                perform_signmaster_rotation(cube, "D'E'U");
+                perform_singmaster_rotation(cube, "D'E'U");
             }
 	    break;
 	case 'Z':
             if (reverse) {
-                perform_signmaster_rotation(cube, "F'S'B");
+                perform_singmaster_rotation(cube, "F'S'B");
             } else {
-                perform_signmaster_rotation(cube, "FSB'");
+                perform_singmaster_rotation(cube, "FSB'");
             }
 	    break;
         default:
-            fprintf(stderr, "Signmaster rotation %c is not implemented! Aborting..\n", signmaster_letter);
+            fprintf(stderr, "Signmaster rotation %c is not implemented! Aborting..\n", singmaster_letter);
             exit(EXIT_FAILURE);
     }
 }
