@@ -4,10 +4,11 @@
 
 #include "operations.h"
 #include "status.h"
+#include "rotations.h"
 #include "representation.h"
 #include "solver.h"
 
-int main()
+int main(int argc, char *argv[])
 {
      /* not very random but that's ok */ 
      srand(getpid());
@@ -21,8 +22,13 @@ int main()
      int cube[6][9];
      instantiate_cube(cube);
 
-     printf("Shuffling cube to a random state\n");
-     shuffle_cube(cube);
+     if (argc > 1) {
+         printf("Performing rotations %s\n", argv[1]);
+         perform_singmaster_rotation(cube, argv[1]);
+     } else {
+         printf("Shuffling cube to a random state\n");
+         shuffle_cube(cube);
+     }
      print_cube(cube);
 
      yellow_cross_solver(cube);
