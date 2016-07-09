@@ -10,6 +10,11 @@
 #include "status.h"
 #include "operations.h"
 
+#define BUFFER_LENGTH 512
+
+int path_to_solved[BUFFER_LENGTH];
+int buffer_counter = 0;
+
 int look_at_depth(int cube[6][9], int desired_state[6][9], int depth, int distance, int history[])
 {
     int move, state;
@@ -25,7 +30,7 @@ int look_at_depth(int cube[6][9], int desired_state[6][9], int depth, int distan
 	for (move = 0; move < ALL_ROTATIONS; move++) {
 	    copy_cube(test_cube, cube);
 	    history[depth - 1] = move;
-	    perform_signmaster_rotation(test_cube, signmaster_rotations[move]);
+	    perform_singmaster_rotation(test_cube, singmaster_rotations[move]);
 	    found_distance = look_at_depth(test_cube, desired_state, depth - 1, distance, history);
 	    if (found_distance <= distance) {
                return found_distance; 
@@ -59,8 +64,14 @@ int iterative_deepening(int cube[6][9], int destination_cube[6][9], int distance
      for (i = max_depth; i > 0; i--) {
          move = history[i - 1]; 
 	 if (move != -1) {
-             perform_signmaster_rotation(cube, signmaster_rotations[move]);
-             printf("%s", signmaster_rotations[move]);
+             perform_singmaster_rotation(cube, singmaster_rotations[move]);
+             printf("%s", singmaster_rotations[move]);
+             if (buffer_counter > BUFFER_LENGTH) {
+	         fprintf(stderr, "Exceeded the maximum amount of moves that fit in the buffer!: %d", BUFFER_LENGTH);
+	         exit(EXIT_FAILURE);
+             }
+             path_to_solved[buffer_counter] = move;
+	     buffer_counter++;
 	 }
      }
      printf("\n");
@@ -70,7 +81,15 @@ int iterative_deepening(int cube[6][9], int destination_cube[6][9], int distance
 
 void yellow_cross_solver(int cube[6][9])
 {
+     int i;
+     for (i = 0; i < BUFFER_LENGTH; i++) {
+         path_to_solved[i] = -1;
+     }
+
      int pattern[6][9];
+     int before_solve_state[6][9];
+     copy_cube(before_solve_state, cube);
+
      printf("Finding a solution\n");
 
      printf("Putting the white face on the top surface\n");
@@ -190,5 +209,22 @@ void yellow_cross_solver(int cube[6][9])
      printf("\nSolving layer 3\n");
      iterative_deepening(cube, solved_cube, 0, 8);
      print_cube(cube);
+
+     print_cube_solved_status(cube);
+
+     printf("\n\nCube pre-solved state: \n");
+     print_cube(before_solve_state);
+
+     printf("Solved cube with %d moves: ", buffer_counter);
+     int move;
+     for (i = 0; i < BUFFER_LENGTH; i++) {
+         move = path_to_solved[i];
+         if (move == -1) {
+             break;
+         }
+         printf("%s", singmaster_rotations[move]);
+         path_to_solved[i] = -1;
+     }
+     printf("\n");
 }
 

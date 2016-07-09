@@ -21,9 +21,9 @@ int main()
      int cube[6][9];
      instantiate_cube(cube);
 
+     printf("Shuffling cube to a random state\n");
      shuffle_cube(cube);
      print_cube(cube);
-     print_cube_solved_status(cube);
 
      yellow_cross_solver(cube);
 
