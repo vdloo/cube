@@ -1,4 +1,4 @@
-AM_CFLAGS = -g -Wall -Wextra
+AM_CFLAGS = -Wall -Wextra -O2 -mtune=native
 bin_PROGRAMS = cube
 SHARED_CFILES = mechanics.c rotations.c representation.c operations.c status.c patterns.c solver.c
 SHARED_HFILES = mechanics.h rotations.h representation.h operations.h status.h patterns.h solver.h
